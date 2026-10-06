@@ -28,8 +28,13 @@ jobs:
       - run: npm run generate
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build
+      # A pull request opened with the default GITHUB_TOKEN does not start the
+      # CI workflow. Set SDK_BOT_TOKEN (a GitHub App or fine-grained token with
+      # contents and pull-requests write) so it does.
       - uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ secrets.SDK_BOT_TOKEN || github.token }}
           branch: spec-sync
           title: "Sync with the API spec"
           commit-message: "Sync with the API spec"

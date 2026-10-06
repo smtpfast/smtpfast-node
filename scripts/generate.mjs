@@ -96,7 +96,13 @@ function emitOp(op, indent) {
     `${indent}${op.name}: (${args.join(", ")}): Promise<Result<T.${T}Responses>> =>\n` +
     `${indent}  core.call(sdk.${op.id}, ${call.length ? `{ ${call.join(", ")} }` : "{}"}, options${op.idempotent ? ", true" : ""}),\n`;
   if (op.paginated) {
-    const pageArgs = args.filter((a) => !a.startsWith("body"));
+    const pageArgs = args
+      .filter((a) => !a.startsWith("body"))
+      .map((a) =>
+        a.startsWith("query")
+          ? `query?: Omit<NonNullable<T.${T}Data["query"]>, "before" | "page" | "latest">`
+          : a,
+      );
     out +=
       `${indent}/** Every item of ${op.name}, fetching the following pages as you iterate. */\n` +
       `${indent}${op.name}All: (${pageArgs.join(", ")}): AsyncIterable<ItemOf<Result<T.${T}Responses>>> =>\n` +

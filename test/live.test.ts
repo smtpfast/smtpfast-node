@@ -28,7 +28,8 @@ function check(operationId: string, body: unknown) {
 }
 
 describe.skipIf(!key)("live API", () => {
-  const client = new SMTPfast({ apiKey: key, baseUrl: process.env.SMTPFAST_BASE_URL });
+  // Built only when the suite runs: describe bodies run during collection even when skipped.
+  const client = key ? new SMTPfast({ apiKey: key, baseUrl: process.env.SMTPFAST_BASE_URL }) : (undefined as never);
 
   it("account.me", async () => check("getCapabilities", await client.account.me()));
 

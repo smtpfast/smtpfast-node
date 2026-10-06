@@ -10,7 +10,7 @@ export function createResources(core: Core) {
       list: (query?: T.ListLogsData["query"], options?: RequestOptions): Promise<Result<T.ListLogsResponses>> =>
         core.call(sdk.listLogs, { query }, options),
       /** Every item of list, fetching the following pages as you iterate. */
-      listAll: (query?: T.ListLogsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListLogsResponses>>> =>
+      listAll: (query?: Omit<NonNullable<T.ListLogsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListLogsResponses>>> =>
         core.paginate(sdk.listLogs, { query }, options),
     },
     emails: {
@@ -18,7 +18,7 @@ export function createResources(core: Core) {
       list: (query?: T.ListEmailsData["query"], options?: RequestOptions): Promise<Result<T.ListEmailsResponses>> =>
         core.call(sdk.listEmails, { query }, options),
       /** Every item of list, fetching the following pages as you iterate. */
-      listAll: (query?: T.ListEmailsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListEmailsResponses>>> =>
+      listAll: (query?: Omit<NonNullable<T.ListEmailsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListEmailsResponses>>> =>
         core.paginate(sdk.listEmails, { query }, options),
       /** Send an email. `POST /v1/emails` */
       send: (body: T.SendEmailData["body"], options?: RequestOptions): Promise<Result<T.SendEmailResponses>> =>
@@ -49,7 +49,7 @@ export function createResources(core: Core) {
         list: (query?: T.ListReceivedEmailsData["query"], options?: RequestOptions): Promise<Result<T.ListReceivedEmailsResponses>> =>
           core.call(sdk.listReceivedEmails, { query }, options),
         /** Every item of list, fetching the following pages as you iterate. */
-        listAll: (query?: T.ListReceivedEmailsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListReceivedEmailsResponses>>> =>
+        listAll: (query?: Omit<NonNullable<T.ListReceivedEmailsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListReceivedEmailsResponses>>> =>
           core.paginate(sdk.listReceivedEmails, { query }, options),
         /** Mark received emails read or unread. `PATCH /v1/emails/receiving` */
         mark: (body: T.MarkReceivedEmailsData["body"], options?: RequestOptions): Promise<Result<T.MarkReceivedEmailsResponses>> =>
@@ -81,7 +81,7 @@ export function createResources(core: Core) {
       list: (query?: T.ListInboxesData["query"], options?: RequestOptions): Promise<Result<T.ListInboxesResponses>> =>
         core.call(sdk.listInboxes, { query }, options),
       /** Every item of list, fetching the following pages as you iterate. */
-      listAll: (query?: T.ListInboxesData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxesResponses>>> =>
+      listAll: (query?: Omit<NonNullable<T.ListInboxesData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxesResponses>>> =>
         core.paginate(sdk.listInboxes, { query }, options),
       /** Create an inbox. `POST /v1/inboxes` */
       create: (body: T.CreateInboxData["body"], options?: RequestOptions): Promise<Result<T.CreateInboxResponses>> =>
@@ -100,7 +100,7 @@ export function createResources(core: Core) {
         list: (inboxId: string, query?: T.ListInboxThreadsData["query"], options?: RequestOptions): Promise<Result<T.ListInboxThreadsResponses>> =>
           core.call(sdk.listInboxThreads, { path: { inbox_id: inboxId }, query }, options),
         /** Every item of list, fetching the following pages as you iterate. */
-        listAll: (inboxId: string, query?: T.ListInboxThreadsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxThreadsResponses>>> =>
+        listAll: (inboxId: string, query?: Omit<NonNullable<T.ListInboxThreadsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxThreadsResponses>>> =>
           core.paginate(sdk.listInboxThreads, { path: { inbox_id: inboxId }, query }, options),
         /** Retrieve a thread. `GET /v1/inboxes/{inbox_id}/threads/{thread_id}` */
         get: (inboxId: string, threadId: string, options?: RequestOptions): Promise<Result<T.GetInboxThreadResponses>> =>
@@ -116,7 +116,7 @@ export function createResources(core: Core) {
           list: (inboxId: string, threadId: string, query?: T.ListInboxThreadEmailsData["query"], options?: RequestOptions): Promise<Result<T.ListInboxThreadEmailsResponses>> =>
             core.call(sdk.listInboxThreadEmails, { path: { inbox_id: inboxId, thread_id: threadId }, query }, options),
           /** Every item of list, fetching the following pages as you iterate. */
-          listAll: (inboxId: string, threadId: string, query?: T.ListInboxThreadEmailsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxThreadEmailsResponses>>> =>
+          listAll: (inboxId: string, threadId: string, query?: Omit<NonNullable<T.ListInboxThreadEmailsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxThreadEmailsResponses>>> =>
             core.paginate(sdk.listInboxThreadEmails, { path: { inbox_id: inboxId, thread_id: threadId }, query }, options),
           /** Retrieve a thread email. `GET /v1/inboxes/{inbox_id}/threads/{thread_id}/emails/{email_id}` */
           get: (inboxId: string, threadId: string, emailId: string, options?: RequestOptions): Promise<Result<T.GetInboxThreadEmailResponses>> =>
@@ -151,7 +151,7 @@ export function createResources(core: Core) {
         list: (inboxId: string, query?: T.ListInboxDraftsData["query"], options?: RequestOptions): Promise<Result<T.ListInboxDraftsResponses>> =>
           core.call(sdk.listInboxDrafts, { path: { inbox_id: inboxId }, query }, options),
         /** Every item of list, fetching the following pages as you iterate. */
-        listAll: (inboxId: string, query?: T.ListInboxDraftsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxDraftsResponses>>> =>
+        listAll: (inboxId: string, query?: Omit<NonNullable<T.ListInboxDraftsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxDraftsResponses>>> =>
           core.paginate(sdk.listInboxDrafts, { path: { inbox_id: inboxId }, query }, options),
         /** Create a draft. `POST /v1/inboxes/{inbox_id}/drafts` */
         create: (inboxId: string, body: T.CreateInboxDraftData["body"], options?: RequestOptions): Promise<Result<T.CreateInboxDraftResponses>> =>
@@ -343,7 +343,7 @@ export function createResources(core: Core) {
       list: (query?: T.ListTemplatesData["query"], options?: RequestOptions): Promise<Result<T.ListTemplatesResponses>> =>
         core.call(sdk.listTemplates, { query }, options),
       /** Every item of list, fetching the following pages as you iterate. */
-      listAll: (query?: T.ListTemplatesData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListTemplatesResponses>>> =>
+      listAll: (query?: Omit<NonNullable<T.ListTemplatesData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListTemplatesResponses>>> =>
         core.paginate(sdk.listTemplates, { query }, options),
       /** Create a template. `POST /v1/templates` */
       create: (body: T.CreateTemplateData["body"], options?: RequestOptions): Promise<Result<T.CreateTemplateResponses>> =>
@@ -440,7 +440,7 @@ export function createResources(core: Core) {
         list: (id: string, query?: T.ListWebhookDeliveriesData["query"], options?: RequestOptions): Promise<Result<T.ListWebhookDeliveriesResponses>> =>
           core.call(sdk.listWebhookDeliveries, { path: { id }, query }, options),
         /** Every item of list, fetching the following pages as you iterate. */
-        listAll: (id: string, query?: T.ListWebhookDeliveriesData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListWebhookDeliveriesResponses>>> =>
+        listAll: (id: string, query?: Omit<NonNullable<T.ListWebhookDeliveriesData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListWebhookDeliveriesResponses>>> =>
           core.paginate(sdk.listWebhookDeliveries, { path: { id }, query }, options),
         /** Get a webhook delivery. `GET /v1/webhooks/{id}/deliveries/{delivery_id}` */
         get: (id: string, deliveryId: string, options?: RequestOptions): Promise<Result<T.GetWebhookDeliveryResponses>> =>
@@ -454,7 +454,7 @@ export function createResources(core: Core) {
         list: (id: string, query?: T.ListWebhookEventsData["query"], options?: RequestOptions): Promise<Result<T.ListWebhookEventsResponses>> =>
           core.call(sdk.listWebhookEvents, { path: { id }, query }, options),
         /** Every item of list, fetching the following pages as you iterate. */
-        listAll: (id: string, query?: T.ListWebhookEventsData["query"], options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListWebhookEventsResponses>>> =>
+        listAll: (id: string, query?: Omit<NonNullable<T.ListWebhookEventsData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListWebhookEventsResponses>>> =>
           core.paginate(sdk.listWebhookEvents, { path: { id }, query }, options),
         /** Retrieve a webhook event. `GET /v1/webhooks/{id}/events/{event_id}` */
         get: (id: string, eventId: string, options?: RequestOptions): Promise<Result<T.GetWebhookEventResponses>> =>

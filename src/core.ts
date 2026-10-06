@@ -43,10 +43,14 @@ type SdkFn = (options: any) => Promise<any>;
 const RETRY_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 const SAFE_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS"]);
 const MAX_RETRY_AFTER_MS = 60_000;
+/** Query parameters listAll sets or cannot combine with walking forward by `after`. */
+export const PAGINATION_MANAGED = ["before", "page", "latest"] as const;
 
 interface Attempt {
   maxRetries: number;
   timeout: number;
+  /** The operation dedupes on Idempotency-Key and this call sends one. */
+  idempotent: boolean;
 }
 
 export class Core {
@@ -54,8 +58,6 @@ export class Core {
   readonly #maxRetries: number;
   readonly #timeout: number;
   readonly #fetch: typeof fetch;
-  // Per-call settings, read by the fetch wrapper for the request in flight.
-  readonly #attempts = new WeakMap<AbortSignal, Attempt>();
 
   constructor(options: ClientOptions = {}) {
     const apiKey = options.apiKey ?? readEnv("SMTPFAST_API_KEY");
@@ -72,7 +74,8 @@ export class Core {
         "User-Agent": `smtpfast-node/${VERSION}`,
         ...options.headers,
       },
-      fetch: ((input: RequestInfo | URL) => this.#send(input as Request)) as typeof fetch,
+      fetch: ((input: RequestInfo | URL) =>
+        this.#send(input as Request, { maxRetries: this.#maxRetries, timeout: this.#timeout, idempotent: false })) as typeof fetch,
     });
   }
 
@@ -84,21 +87,28 @@ export class Core {
       const key = options.idempotencyKey ?? (maxRetries > 0 ? crypto.randomUUID() : undefined);
       if (key) headers["Idempotency-Key"] = key;
     }
-    // A signal per call carries this call's retry settings to the fetch wrapper.
-    const controller = new AbortController();
-    const signal = options.signal ? AbortSignal.any([options.signal, controller.signal]) : controller.signal;
-    this.#attempts.set(signal, { maxRetries, timeout: options.timeout ?? this.#timeout });
-
-    const result = await fn({ client: this.client, ...args, headers, signal, throwOnError: false });
+    // hey-api takes a fetch per call, which carries this call's retry settings.
+    const settings: Attempt = {
+      maxRetries,
+      timeout: options.timeout ?? this.#timeout,
+      idempotent: idempotent && Boolean(headers["Idempotency-Key"]),
+    };
+    const fetch = (input: RequestInfo | URL) => this.#send(input as Request, settings);
+    const result = await fn({ client: this.client, ...args, headers, signal: options.signal, fetch, throwOnError: false });
     if (result.error instanceof SMTPfastError) throw result.error;
     if (!result.response) throw new APIConnectionError(undefined, { cause: result.error });
     if (!result.response.ok) throw APIError.from(result.response.status, result.error, result.response.headers);
+    if (result.error !== undefined) {
+      if (options.signal?.aborted) throw options.signal.reason;
+      throw new APIConnectionError("Could not read the response from the SMTPfast API", { cause: result.error });
+    }
     return result.data as R;
   }
 
   /** Follow `has_more` with `after` = the id of the last item, yielding every item. */
   async *paginate<I>(fn: SdkFn, args: { path?: object; query?: object }, options?: RequestOptions): AsyncIterable<I> {
     let query = { ...(args.query ?? {}) } as Record<string, unknown>;
+    for (const key of PAGINATION_MANAGED) delete query[key];
     for (;;) {
       const page = await this.call<{ data?: I[] | null; has_more?: boolean }>(fn, { ...args, query }, options);
       const items = page.data ?? [];
@@ -109,10 +119,8 @@ export class Core {
     }
   }
 
-  async #send(request: Request): Promise<Response> {
-    const settings = this.#attempts.get(request.signal) ?? { maxRetries: this.#maxRetries, timeout: this.#timeout };
-    const retryable =
-      SAFE_METHODS.has(request.method) || request.headers.has("Idempotency-Key");
+  async #send(request: Request, settings: Attempt): Promise<Response> {
+    const retryable = SAFE_METHODS.has(request.method) || settings.idempotent;
     for (let attempt = 0; ; attempt++) {
       const timeout = AbortSignal.timeout(settings.timeout);
       let response: Response;
@@ -151,7 +159,8 @@ function retryDelay(response: Response, attempt: number, retryable: boolean): nu
     return after;
   }
   if (!retryable) return null;
-  return after !== null && after <= MAX_RETRY_AFTER_MS ? after : backoff(attempt);
+  if (after !== null) return after <= MAX_RETRY_AFTER_MS ? after : null;
+  return backoff(attempt);
 }
 
 function backoff(attempt: number): number {

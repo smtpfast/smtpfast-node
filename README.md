@@ -1,6 +1,6 @@
 # SMTPfast Node.js SDK
 
-The official TypeScript and JavaScript SDK for the [SMTPfast](https://smtpfa.st) API. It covers every endpoint in the API, has full types, and has no runtime dependencies. It runs on Node.js 20+, Bun, Deno and edge runtimes.
+The official TypeScript and JavaScript SDK for the [SMTPfast](https://smtpfa.st) API. It covers every endpoint in the API, has full types, and has no runtime dependencies. It runs on Node.js 22+, Bun, Deno and edge runtimes.
 
 ```bash
 npm install @smtpfast/sdk

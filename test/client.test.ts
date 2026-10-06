@@ -136,7 +136,20 @@ describe("retries", () => {
     expect(calls).toHaveLength(3);
   });
 
-  it("retries a dropped connection, then throws APIConnectionError", async () => {
+  it("takes maxRetries and timeout per call", async () => {
+    const busy = () => json({ error: "busy" }, 503, noWait);
+    const { client, calls } = mockClient([busy, busy, busy]);
+    await expect(client.domains.list({ maxRetries: 0 })).rejects.toMatchObject({ status: 503 });
+    expect(calls).toHaveLength(1);
+
+    const slow = mockClient([], {
+      fetch: ((_: Request, init: RequestInit) =>
+        new Promise((_, reject) => init.signal!.addEventListener("abort", () => reject(init.signal!.reason)))) as typeof fetch,
+    });
+    await expect(slow.client.domains.list({ maxRetries: 0, timeout: 20 })).rejects.toBeInstanceOf(APITimeoutError);
+  });
+
+    it("retries a dropped connection, then throws APIConnectionError", async () => {
     const drop = new TypeError("fetch failed");
     const { client, calls } = mockClient([drop, drop], { maxRetries: 1 });
     await expect(client.domains.list()).rejects.toBeInstanceOf(APIConnectionError);
@@ -206,5 +219,36 @@ describe("webhooks", () => {
     const event = await parseWebhook({ payload, headers: { "X-SMTPfast-Signature": signature }, secret });
     expect(event.type).toBe("email.delivered");
     await expect(parseWebhook({ payload, headers: new Headers({ "x-smtpfast-signature": "00" }), secret })).rejects.toThrow();
+  });
+});
+
+describe("review fixes", () => {
+  const noWait = { "Retry-After": "0" };
+
+  it("does not retry a POST because a custom header carries an Idempotency-Key", async () => {
+    const { client, calls } = mockClient([json({ error: "oops" }, 500, noWait)], { headers: { "Idempotency-Key": "x" } });
+    await expect(client.broadcasts.sendTest("bc_1", { to: "me@inbox.dev" })).rejects.toMatchObject({ status: 500 });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("does not retry when Retry-After is longer than a minute", async () => {
+    const { client, calls } = mockClient([json({ error: "down" }, 503, { "Retry-After": "120" })]);
+    await expect(client.domains.list()).rejects.toMatchObject({ status: 503 });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("throws when a 200 body cannot be parsed", async () => {
+    const { client } = mockClient([new Response("{not json", { status: 200, headers: { "Content-Type": "application/json" } })]);
+    await expect(client.domains.list()).rejects.toBeInstanceOf(APIConnectionError);
+  });
+
+  it("listAll drops before and page, which cannot combine with after", async () => {
+    const { client, calls } = mockClient([json({ data: [{ id: "a" }], has_more: true }), json({ data: [], has_more: false })]);
+    // @ts-expect-error before is not part of listAll's query
+    for await (const _ of client.templates.listAll({ before: "t_9", limit: 1 })) void _;
+    expect(calls.map((c) => [c.url.searchParams.get("before"), c.url.searchParams.get("after")])).toEqual([
+      [null, null],
+      [null, "a"],
+    ]);
   });
 });
