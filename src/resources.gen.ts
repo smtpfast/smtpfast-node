@@ -199,7 +199,7 @@ export function createResources(core: Core) {
         core.call(sdk.deleteContacts, { body }, options),
       /** Export contacts. `GET /v1/contacts/export` */
       export: (query?: T.ExportContactsData["query"], options?: RequestOptions): Promise<Result<T.ExportContactsResponses>> =>
-        core.call(sdk.exportContacts, { query }, options),
+        core.call(sdk.exportContacts, { query: { format: "json", ...query } }, options),
       /** Retrieve a contact. `GET /v1/contacts/{id}` */
       get: (id: string, options?: RequestOptions): Promise<Result<T.GetContactResponses>> =>
         core.call(sdk.getContact, { path: { id } }, options),

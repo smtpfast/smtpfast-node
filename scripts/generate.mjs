@@ -51,6 +51,8 @@ for (const [path, item] of Object.entries(spec.paths)) {
     const params = op.parameters ?? [];
     const pathParams = [...path.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
     const query = params.filter((p) => p.in === "query");
+    // The typed method parses JSON, so it asks for JSON when the default format is something else.
+    const format = query.find((p) => p.name === "format" && p.schema?.enum?.includes("json") && p.schema?.default !== "json");
     const result = successSchema(op);
     node.ops.push({
       id: op.operationId,
@@ -61,6 +63,7 @@ for (const [path, item] of Object.entries(spec.paths)) {
       pathParams,
       hasQuery: query.length > 0,
       queryRequired: query.some((p) => p.required),
+      jsonFormat: Boolean(format),
       hasBody: Boolean(op.requestBody),
       bodyRequired: Boolean(op.requestBody?.required),
       idempotent: params.some((p) => p.in === "header" && p.name.toLowerCase() === "idempotency-key"),
@@ -87,7 +90,7 @@ function emitOp(op, indent) {
   }
   if (op.hasQuery) {
     args.push(`query${op.queryRequired ? "" : "?"}: T.${T}Data["query"]`);
-    call.push("query");
+    call.push(op.jsonFormat ? 'query: { format: "json", ...query }' : "query");
   }
   args.push("options?: RequestOptions");
   const doc = `${indent}/** ${op.summary.replace(/\*\//g, "*\\/")}. \`${op.method} ${op.path}\` */\n`;
