@@ -1,0 +1,58 @@
+{
+  "name": "@smtpfast/sdk",
+  "version": "0.1.0",
+  "description": "The official SMTPfast SDK for Node.js and TypeScript.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smtpfast/smtpfast-node.git"
+  },
+  "homepage": "https://smtpfa.st/docs",
+  "keywords": [
+    "smtpfast",
+    "email",
+    "transactional-email",
+    "api",
+    "sdk"
+  ],
+  "scripts": {
+    "spec:pull": "node scripts/pull-spec.mjs",
+    "generate": "node scripts/generate.mjs",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:live": "vitest run test/live.test.ts"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "@types/node": "^26.6.4",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
+  }
+}

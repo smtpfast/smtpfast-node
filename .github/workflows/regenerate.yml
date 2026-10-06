@@ -1,0 +1,38 @@
+name: Regenerate from the API spec
+
+# Pulls the published OpenAPI document, regenerates the SDK and opens a pull
+# request when anything changed. Runs daily, on demand, and when the API repo
+# sends a spec-changed dispatch.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types: [spec-changed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run spec:pull
+      - run: npm run generate
+      - run: npm run typecheck
+      - run: npm test
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: spec-sync
+          title: "Sync with the API spec"
+          commit-message: "Sync with the API spec"
+          body: |
+            The published OpenAPI document changed. This regenerates `src/generated/` and `src/resources.gen.ts` from it.
+            Review the diff of `spec/openapi.json` for what changed in the API.
