@@ -458,6 +458,7 @@ export type EmailSummary = {
 };
 
 export type EmailList = {
+    object: string;
     data: Array<EmailSummary>;
     /**
      * Absent when paging with after or before
@@ -616,6 +617,10 @@ export type Segment = SegmentSummary & {
 
 export type SegmentList = {
     object: string;
+    /**
+     * Always false: every segment is in one page
+     */
+    has_more: boolean;
     data: Array<SegmentSummary>;
     total: number;
     segment_limit: number;
@@ -1083,6 +1088,8 @@ export type SignupFormList = {
 };
 
 export type PendingSignupList = {
+    object: string;
+    has_more: boolean;
     data: Array<PendingSignup>;
     total: number;
     /**
@@ -1226,7 +1233,7 @@ export type AddDomainRequest = {
 };
 
 /**
- * A domain as the list returns it. The field names are camelCase here, unlike the rest of the API.
+ * A domain as the list returns it. GET /v1/domains/{id} has the DNS records and verification detail.
  */
 export type DomainListItem = {
     id: string;
@@ -1235,16 +1242,16 @@ export type DomainListItem = {
      * pending, verifying, verified or failed
      */
     status: string;
-    dkimStatus: string;
-    spfStatus: string;
-    dmarcStatus: string;
-    verifiedAt: string | null;
-    createdAt: string;
-    receivingEnabled: boolean;
+    dkim_status: string;
+    spf_status: string;
+    dmarc_status: string;
+    verified_at: string | null;
+    created_at: string;
+    receiving_enabled: boolean;
     /**
      * disabled, pending, active or failed
      */
-    receivingStatus: string;
+    receiving_status: string;
 };
 
 export type Domain = {
@@ -2701,7 +2708,7 @@ export type ReplyToReceivedEmailErrors = {
      */
     401: Error;
     /**
-     * Error
+     * Plan limit reached - upgrade the plan to add more
      */
     402: Error;
     /**
@@ -3678,6 +3685,7 @@ export type ListInboxLabelsResponses = {
      */
     200: {
         object?: string;
+        has_more?: boolean;
         data?: Array<InboxLabel>;
     };
 };
@@ -4311,6 +4319,8 @@ export type ListContactPropertiesResponses = {
      * The declared properties
      */
     200: {
+        object: string;
+        has_more: boolean;
         data: Array<ContactProperty>;
     };
 };
@@ -4572,6 +4582,10 @@ export type CreateContactErrors = {
      */
     401: Error;
     /**
+     * Plan limit reached - upgrade the plan to add more
+     */
+    402: Error;
+    /**
      * Forbidden - domain not verified or insufficient permissions
      */
     403: Error;
@@ -4703,6 +4717,10 @@ export type CreateSegmentErrors = {
      * Invalid or missing API key
      */
     401: Error;
+    /**
+     * Plan limit reached - upgrade the plan to add more
+     */
+    402: Error;
     /**
      * Forbidden - domain not verified or insufficient permissions
      */
@@ -6899,7 +6917,11 @@ export type ListDomainsResponses = {
     /**
      * List of domains
      */
-    200: Array<DomainListItem>;
+    200: {
+        object: string;
+        has_more: boolean;
+        data: Array<DomainListItem>;
+    };
 };
 
 export type ListDomainsResponse = ListDomainsResponses[keyof ListDomainsResponses];
@@ -6921,7 +6943,7 @@ export type AddDomainErrors = {
      */
     401: Error;
     /**
-     * Error
+     * Plan limit reached - upgrade the plan to add more
      */
     402: Error;
     /**
@@ -7071,7 +7093,7 @@ export type UpdateDomainReceivingErrors = {
      */
     401: Error;
     /**
-     * Error
+     * Plan limit reached - upgrade the plan to add more
      */
     402: Error;
     /**
@@ -7188,7 +7210,7 @@ export type ClaimDomainErrors = {
      */
     401: Error;
     /**
-     * Error
+     * Plan limit reached - upgrade the plan to add more
      */
     402: Error;
     /**
@@ -7325,7 +7347,11 @@ export type ListApiKeysResponses = {
     /**
      * List of API keys
      */
-    200: Array<ApiKey>;
+    200: {
+        object: string;
+        has_more: boolean;
+        data: Array<ApiKey>;
+    };
 };
 
 export type ListApiKeysResponse = ListApiKeysResponses[keyof ListApiKeysResponses];
@@ -7500,7 +7526,11 @@ export type ListWebhooksResponses = {
     /**
      * List of webhooks
      */
-    200: Array<Webhook>;
+    200: {
+        object: string;
+        has_more: boolean;
+        data: Array<Webhook>;
+    };
 };
 
 export type ListWebhooksResponse = ListWebhooksResponses[keyof ListWebhooksResponses];
@@ -7521,6 +7551,14 @@ export type CreateWebhookErrors = {
      * Invalid or missing API key
      */
     401: Error;
+    /**
+     * Plan limit reached - upgrade the plan to add more
+     */
+    402: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
     /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */

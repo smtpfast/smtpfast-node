@@ -43,7 +43,7 @@ describe.skipIf(!key)("live API", () => {
   it("domains.list and domains.get", async () => {
     const list = await client.domains.list();
     check("listDomains", list);
-    const first = list[0];
+    const first = list.data[0];
     if (first) check("getDomain", await client.domains.get(first.id));
   });
 
