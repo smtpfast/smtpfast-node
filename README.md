@@ -18,9 +18,12 @@ const email = await smtpfast.emails.send({
   to: ["customer@example.org"],
   subject: "Your receipt",
   html: "<p>Thanks for your order.</p>",
+  category: "transactional",
 });
 console.log(email.id);
 ```
+
+Email is marketing unless you set `category` to `transactional`. Marketing email gets a one-click unsubscribe header and is not sent to people who unsubscribed. Set `transactional` on receipts, password resets and account alerts so a marketing opt-out does not block them.
 
 Every API operation is a method, named after its path: `smtpfast.domains.verify(id)`, `smtpfast.contacts.segments.add(contactId, segmentId)`, `smtpfast.inboxes.threads.emails.reply(inboxId, threadId, emailId, body)`. Path parameters come first, then the request body or the query, then options.
 
