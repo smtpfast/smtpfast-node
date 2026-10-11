@@ -640,7 +640,7 @@ export const listContacts = <ThrowOnError extends boolean = false>(options?: Opt
 /**
  * Create a contact
  *
- * Create a global contact for the current account. Supports firstName/lastName and first_name/last_name aliases for Resend compatibility.
+ * Create one contact, or send { contacts: [...] } to create or update up to 500 at once. The single form returns 409 when the email already exists; the bulk form matches existing contacts by email and updates them. Supports firstName/lastName and first_name/last_name aliases for Resend compatibility.
  */
 export const createContact = <ThrowOnError extends boolean = false>(options: Options<CreateContactData, ThrowOnError>): RequestResult<CreateContactResponses, CreateContactErrors, ThrowOnError> => (options.client ?? client).post<CreateContactResponses, CreateContactErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -917,7 +917,7 @@ export const addContactToSegment = <ThrowOnError extends boolean = false>(option
 /**
  * Suppress addresses in bulk
  *
- * Resend-compatible: add 1 to 100 addresses as manual suppressions. An address already suppressed keeps its record. Requires the contact:write scope.
+ * Resend-compatible: add 1 to 100 addresses as manual suppressions of every send (scope all). An address already suppressed keeps its record, except that a marketing-only one becomes a manual suppression of every send. Requires the contact:write scope.
  */
 export const addSuppressionsBatch = <ThrowOnError extends boolean = false>(options: Options<AddSuppressionsBatchData, ThrowOnError>): RequestResult<AddSuppressionsBatchResponses, AddSuppressionsBatchErrors, ThrowOnError> => (options.client ?? client).post<AddSuppressionsBatchResponses, AddSuppressionsBatchErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -947,7 +947,7 @@ export const removeSuppressionsBatch = <ThrowOnError extends boolean = false>(op
 /**
  * List suppressions
  *
- * Return suppressed addresses for the current account. Suppressed recipients are blocked before sending.
+ * Return suppressed addresses for the current account. Suppressed recipients are blocked before sending. A suppression with scope marketing blocks marketing email only; scope all blocks every send.
  */
 export const listSuppressions = <ThrowOnError extends boolean = false>(options?: Options<ListSuppressionsData, ThrowOnError>): RequestResult<ListSuppressionsResponses, ListSuppressionsErrors, ThrowOnError> => (options?.client ?? client).get<ListSuppressionsResponses, ListSuppressionsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -958,7 +958,7 @@ export const listSuppressions = <ThrowOnError extends boolean = false>(options?:
 /**
  * Create a manual suppression
  *
- * Manually suppress an address so future sends to it are blocked.
+ * Manually suppress an address so future sends to it are blocked: every send by default, or marketing email only with scope marketing.
  */
 export const createSuppression = <ThrowOnError extends boolean = false>(options: Options<CreateSuppressionData, ThrowOnError>): RequestResult<CreateSuppressionResponses, CreateSuppressionErrors, ThrowOnError> => (options.client ?? client).post<CreateSuppressionResponses, CreateSuppressionErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -1102,7 +1102,7 @@ export const duplicateBroadcast = <ThrowOnError extends boolean = false>(options
 /**
  * Send or schedule a broadcast
  *
- * Snapshot eligible subscribed contacts, create one queued email per recipient, and send now or schedule within 30 days.
+ * Snapshot eligible subscribed contacts, create one queued email per recipient, and send now or schedule within 30 days. With send_over_minutes the recipients go out evenly spread over that window instead of all at once; a canceled broadcast stops the sends that have not gone out yet.
  */
 export const sendBroadcast = <ThrowOnError extends boolean = false>(options: Options<SendBroadcastData, ThrowOnError>): RequestResult<SendBroadcastResponses, SendBroadcastErrors, ThrowOnError> => (options.client ?? client).post<SendBroadcastResponses, SendBroadcastErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

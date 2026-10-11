@@ -67,6 +67,18 @@ export type ReceivedEmailSummary = {
     };
     in_reply_to?: string | null;
     references?: Array<string>;
+    /**
+     * When the message was marked read. Not in Resend.
+     */
+    read_at?: string | null;
+    /**
+     * The inbox this copy was filed into, when its address has one. Not in Resend.
+     */
+    inbox_id?: string | null;
+    /**
+     * The inbox thread this copy was filed into. Not in Resend.
+     */
+    thread_id?: string | null;
 };
 
 export type Inbox = {
@@ -408,13 +420,24 @@ export type SendEmailRequest = {
      */
     scheduled_at?: string;
     /**
-     * HTML body of the email. Include `{{unsubscribe_url}}` (or the Resend-compatible `{{{RESEND_UNSUBSCRIBE_URL}}}`) anywhere in the body and SMTPfast substitutes the per-recipient unsubscribe link at send time. The same URL is set on the RFC 8058 `List-Unsubscribe` header automatically.
+     * Defaults to marketing. Label receipts, password resets and other transactional mail transactional so a marketing opt-out does not block them; unlabelled mail is treated as marketing. Over SMTP, set the X-SMTPfast-Category header instead; it is removed before sending. An email whose html or text (for a template, the rendered body) contains an unsubscribe placeholder is always marketing. A marketing email carries the one-click List-Unsubscribe header and is not sent to anyone who unsubscribed. A transactional email has no List-Unsubscribe header and still goes to addresses whose suppression has scope marketing (a recipient's own unsubscribe, or a manual suppression created with scope marketing), but not to addresses with scope all: hard bounces, complaints, and manual suppressions, which block everything by default. Transactional means mail the recipient needs because of an action or account; labelling promotions transactional is not allowed. Any other value is refused with 400.
+     */
+    category?: 'transactional' | 'marketing';
+    /**
+     * HTML body of the email. Include `{{unsubscribe_url}}` (or the Resend-compatible `{{{RESEND_UNSUBSCRIBE_URL}}}`) anywhere in the body and SMTPfast substitutes the per-recipient unsubscribe link at send time. An email with the placeholder is always marketing, and a marketing email gets the same URL on the RFC 8058 `List-Unsubscribe` header.
      */
     html?: string;
     /**
      * Plain text fallback body. Supports the same `{{unsubscribe_url}}` placeholder as the HTML body.
      */
     text?: string;
+};
+
+/**
+ * The id of the accepted email, as Resend returns it. Fetch the email with GET /v1/emails/{id}.
+ */
+export type SendEmailResponse = {
+    id: string;
 };
 
 export type Email = {
@@ -424,15 +447,80 @@ export type Email = {
      */
     from: string;
     to: Array<string>;
+    cc: Array<string>;
+    bcc: Array<string>;
     subject: string;
-    html?: string | null;
-    text?: string | null;
-    status: 'queued' | 'scheduled' | 'sending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'complained' | 'failed' | 'canceled';
+    /**
+     * The stored body. For an API send the {{unsubscribe_url}} placeholder is filled in when the email goes out, so it appears here unreplaced; broadcast and form emails are stored with the real link. Null when there was no HTML body or the retention window removed it.
+     */
+    html: string | null;
+    /**
+     * The stored plain-text body, null when there was none or the retention window removed it.
+     */
+    text: string | null;
+    created_at: string;
+    /**
+     * The type of the newest event, or the status when the email has no events yet. Resend-compatible.
+     */
+    last_event: string;
+    /**
+     * When the retention window removed html and text. Null while the body is kept, so null html and text with a timestamp here means the content is no longer stored.
+     */
+    body_cleared_at: string | null;
     /**
      * api, smtp, dashboard, broadcast or broadcast_test
      */
     source: string;
-    created_at: string;
+    /**
+     * Decides which suppressions apply and whether the List-Unsubscribe header went out. marketing unless the email was labelled transactional; broadcasts, signup form emails and emails sent before categories existed are marketing.
+     */
+    category: 'transactional' | 'marketing';
+    status: 'queued' | 'scheduled' | 'sending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'complained' | 'failed' | 'canceled';
+    /**
+     * The Reply-To address the email was sent with, or null.
+     */
+    reply_to: string | null;
+    /**
+     * The tags given at send time, as name/value pairs. Empty when none were given.
+     */
+    tags: Array<{
+        name: string;
+        value: string;
+    }>;
+    /**
+     * The RFC 5322 Message-ID on your sending domain, the one a recipient's server and bounce reports quote. Null until the email is sent.
+     */
+    message_id: string | null;
+    /**
+     * The Amazon SES message id. Kept for older integrations; correlate with message_id.
+     */
+    ses_message_id: string | null;
+    sent_at: string | null;
+    delivered_at: string | null;
+    opened_at: string | null;
+    clicked_at: string | null;
+    bounced_at: string | null;
+    /**
+     * When the recipient unsubscribed through this email. status keeps its delivery value.
+     */
+    unsubscribed_at: string | null;
+    error_message: string | null;
+    /**
+     * Every event of the email, oldest first.
+     */
+    events: Array<{
+        /**
+         * queued, scheduled, sending, retrying, sent, delivered, delivery_delayed, bounced, complained, opened, clicked, failed, suppressed or unsubscribed
+         */
+        type: string;
+        /**
+         * Event details such as the bounce type or the clicked URL
+         */
+        metadata: {
+            [key: string]: unknown;
+        } | null;
+        timestamp: string;
+    }>;
 };
 
 export type EmailSummary = {
@@ -448,6 +536,7 @@ export type EmailSummary = {
      * api, smtp, dashboard, broadcast or broadcast_test
      */
     source: string;
+    category: 'transactional' | 'marketing';
     created_at: string;
     sent_at: string | null;
     delivered_at: string | null;
@@ -567,11 +656,93 @@ export type ContactDeleted = {
 export type ContactList = {
     object: string;
     has_more: boolean;
-    data: Array<ContactSummary>;
+    data: Array<ContactListItem>;
+    page?: number;
+    page_size?: number;
+    /**
+     * Contacts matching the filters
+     */
+    filtered_total?: number;
+    /**
+     * Every contact of the team
+     */
+    total?: number;
+    subscribed?: number;
+    unsubscribed?: number;
     /**
      * Subscribed contacts on throwaway-mailbox domains
      */
     disposable?: number;
+    /**
+     * Subscribed contacts added in the last 7 days
+     */
+    new_7d?: number;
+    /**
+     * Subscribed contacts added in the last 30 days
+     */
+    new_30d?: number;
+    /**
+     * The plan's contact limit, with any override for the account
+     */
+    contact_limit?: number;
+    /**
+     * The plan's contact limit without overrides
+     */
+    contact_limit_base?: number;
+    tier?: string;
+};
+
+/**
+ * A contact as lists return it: the summary fields plus properties, segments and the suppression.
+ */
+export type ContactListItem = ContactSummary & {
+    properties: {
+        [key: string]: unknown;
+    };
+    suppression: ContactSuppression | null;
+};
+
+export type ContactExport = {
+    object: string;
+    /**
+     * True when more than 10,000 contacts matched and the export stopped there
+     */
+    has_more: boolean;
+    data: Array<ContactListItem>;
+    exported_at: string;
+};
+
+export type SegmentContactList = {
+    object: string;
+    has_more: boolean;
+    data: Array<ContactListItem>;
+    segment: {
+        id: string;
+        name: string;
+    };
+    page: number;
+    page_size: number;
+    /**
+     * Contacts in the segment
+     */
+    total: number;
+};
+
+/**
+ * Create or update up to 500 contacts, matched by email. Fields sent replace the stored ones; fields left out stay. segment_ids only adds memberships.
+ */
+export type CreateContactBatchRequest = {
+    contacts: Array<CreateContactRequest>;
+    /**
+     * Manual segments to add every contact to, for contacts that do not name their own
+     */
+    segment_ids?: Array<string>;
+};
+
+export type ContactBatchCreated = {
+    object: string;
+    has_more: boolean;
+    data: Array<ContactSummary>;
 };
 
 export type ContactSummary = {
@@ -585,8 +756,18 @@ export type ContactSummary = {
      * The address is on a known throwaway-mailbox domain (set when the contact is created).
      */
     disposable: boolean;
+    /**
+     * The address is on the suppression list
+     */
     suppressed: boolean;
-    segments?: Array<SegmentSummary>;
+    /**
+     * The manual segments the contact is in. Lists and GET /v1/contacts/{id} return it.
+     */
+    segments?: Array<{
+        id: string;
+        name: string;
+        color: string | null;
+    }>;
 };
 
 export type SegmentSummary = {
@@ -639,12 +820,20 @@ export type ContactSuppression = {
     id: string;
     reason: string;
     source: string;
+    /**
+     * all: every send to the address is blocked. marketing: only marketing email is blocked, and email labelled transactional still goes out. A recipient's own unsubscribe is marketing. Hard bounces, complaints and unsubscribes recorded before marketing-only unsubscribes existed are all. A manual suppression is all unless it was created with scope marketing.
+     */
+    scope: 'all' | 'marketing';
     created_at: string;
 };
 
 export type CreateSuppressionRequest = {
     email: string;
     reason?: 'manual';
+    /**
+     * all blocks every send to the address. marketing blocks marketing email only, like a recipient's own unsubscribe. An address already on the list keeps its suppression, except that scope all turns a marketing-only one into a manual suppression of every send.
+     */
+    scope?: 'all' | 'marketing';
     /**
      * Optional internal note for manual suppressions
      */
@@ -655,6 +844,19 @@ export type SuppressionList = {
     object: string;
     has_more: boolean;
     data: Array<Suppression>;
+    page?: number;
+    page_size?: number;
+    /**
+     * Suppressions matching q and reason
+     */
+    filtered_total?: number;
+    /**
+     * Every suppression of the team
+     */
+    total?: number;
+    hard_bounces?: number;
+    complaints?: number;
+    manual?: number;
 };
 
 export type Suppression = {
@@ -663,6 +865,10 @@ export type Suppression = {
     email: string;
     reason: 'hard_bounce' | 'complaint' | 'manual' | 'unsubscribe';
     source: string;
+    /**
+     * all: every send to the address is blocked. marketing: only marketing email is blocked, and email labelled transactional still goes out. A recipient's own unsubscribe is marketing. Hard bounces, complaints and unsubscribes recorded before marketing-only unsubscribes existed are all. A manual suppression is all unless it was created with scope marketing.
+     */
+    scope: 'all' | 'marketing';
     bounce_type?: string | null;
     diagnostic_code?: string | null;
     feedback_id?: string | null;
@@ -719,6 +925,10 @@ export type CreateBroadcastRequest = {
     text?: string | null;
     track_opens?: boolean;
     track_clicks?: boolean;
+    /**
+     * Not in Resend. Spread the send evenly over this many minutes from the send time (or scheduled_at): recipient i of N goes out at start + i * window / N. 0 sends to everyone at once. 15 to 4320 (72 hours). Useful on a new sending domain or during the first week's warm-up, where each hour of the window must fit the hourly cap; the daily cap still counts the whole send. null clears it.
+     */
+    send_over_minutes?: number | null;
 };
 
 export type UpdateBroadcastRequest = CreateBroadcastRequest;
@@ -727,6 +937,16 @@ export type BroadcastList = {
     object: string;
     data: Array<Broadcast>;
     has_more: boolean;
+    page?: number;
+    page_size?: number;
+    /**
+     * Broadcasts matching the status filter
+     */
+    filtered_total?: number;
+    /**
+     * Every broadcast of the team
+     */
+    total?: number;
     status_counts?: {
         [key: string]: number;
     };
@@ -766,6 +986,10 @@ export type Broadcast = {
      * Eligible recipients counted when the send was accepted
      */
     expected_recipients?: number | null;
+    /**
+     * Minutes the send is spread over from its start (scheduled_at, else queued_at); 0 means all at once
+     */
+    send_over_minutes?: number;
     track_opens?: boolean;
     track_clicks?: boolean;
     recipient_count?: number;
@@ -774,11 +998,69 @@ export type Broadcast = {
     updated_at: string;
 };
 
+/**
+ * A broadcast with its latest 250 recipients and the links clicked in it.
+ */
+export type BroadcastDetail = Broadcast & {
+    recipients: Array<BroadcastRecipientDetail>;
+    links: Array<{
+        url: string;
+        clicks: number;
+    }>;
+};
+
+export type BroadcastRecipientDetail = {
+    id: string;
+    email: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    status: string;
+    /**
+     * Why the contact was left out: unsubscribed, suppressed or invalid
+     */
+    skip_reason?: string | null;
+    email_id?: string | null;
+    queued_at?: string | null;
+    sent_at?: string | null;
+    delivered_at?: string | null;
+    opened_at?: string | null;
+    clicked_at?: string | null;
+    bounced_at?: string | null;
+    complained_at?: string | null;
+    unsubscribed_at?: string | null;
+    failed_at?: string | null;
+    error_message?: string | null;
+    events: Array<{
+        id: string;
+        type: string;
+        metadata?: {
+            [key: string]: unknown;
+        };
+        created_at: string;
+    }>;
+};
+
+export type BroadcastSendResult = Broadcast & {
+    /**
+     * Contacts the send will reach
+     */
+    recipients: number;
+    /**
+     * Contacts left out: unsubscribed, suppressed or invalid
+     */
+    skipped: number;
+    batch_id: string;
+};
+
 export type BroadcastMetrics = {
     total?: number;
     skipped?: number;
     queued?: number;
     sending?: number;
+    /**
+     * Recipients whose email the provider accepted, whatever happened next. Shows how far a send spread over send_over_minutes has got.
+     */
+    handed_off?: number;
     sent?: number;
     delivered?: number;
     opened?: number;
@@ -1254,25 +1536,112 @@ export type DomainListItem = {
     receiving_status: string;
 };
 
+/**
+ * POST /v1/domains returns id, domain, status, dns_records and created_at. GET /v1/domains/{id} adds the verification detail, a live DNS check of each record and the receiving settings.
+ */
 export type Domain = {
     id: string;
     domain: string;
-    status: 'pending' | 'verified' | 'failed';
     /**
-     * Whether inbound email is turned on for the domain (list responses).
+     * GET /v1/domains/{id} answers pending for a verified domain whose required records are no longer live.
      */
-    receivingEnabled?: boolean;
+    status: 'pending' | 'verifying' | 'verified' | 'failed';
     /**
-     * Inbound status (list responses).
+     * Inbound email for the domain
      */
-    receivingStatus?: 'disabled' | 'pending' | 'active' | 'failed';
+    receiving?: {
+        enabled?: boolean;
+        status?: 'disabled' | 'pending' | 'active' | 'failed';
+        /**
+         * The team's plan includes inbound email
+         */
+        available?: boolean;
+        /**
+         * The domain can turn receiving on
+         */
+        eligible?: boolean;
+        mx_record?: {
+            name?: string;
+            type?: string;
+            priority?: number;
+            value?: string;
+        };
+        checked_at?: string | null;
+    };
+    verification_phase?: 'verified' | 'dns_missing' | 'waiting_on_ses' | 'mail_from_pending' | 'failed';
+    verification_message?: string;
+    /**
+     * Null once the domain is verified
+     */
+    next_auto_check_at?: string | null;
+    dkim_status?: string;
+    spf_status?: string;
+    dmarc_status?: string;
+    mail_from_status?: string;
+    mail_from_domain?: string | null;
+    verified_at?: string | null;
+    region?: string;
+    /**
+     * The DNS provider found from the NS records
+     */
+    provider?: {
+        id?: string;
+        name?: string;
+        badge?: string;
+        zone?: string;
+    };
+    /**
+     * The verification steps and when each was done
+     */
+    events?: Array<{
+        key?: string;
+        label?: string;
+        at?: string | null;
+        done?: boolean;
+    }>;
     dns_records: Array<DnsRecord>;
+    created_at: string;
+    last_checked_at?: string | null;
 };
 
 export type DnsRecord = {
-    type?: 'CNAME' | 'TXT' | 'MX';
-    name?: string;
-    value?: string;
+    type: 'CNAME' | 'TXT' | 'MX';
+    name: string;
+    value: string;
+    ttl?: string;
+    /**
+     * Set for MX records
+     */
+    priority?: number | null;
+    /**
+     * The verification status that covers this record
+     */
+    status?: string;
+    /**
+     * DKIM authentication, SPF authorization, DMARC policy, MAIL FROM bounce delivery, MAIL FROM SPF or Inbound mail
+     */
+    purpose?: string;
+    category?: 'verification' | 'sending' | 'receiving';
+    /**
+     * GET /v1/domains/{id} only: what DNS answers now, several values joined with " | "
+     */
+    actual_value?: string | null;
+    /**
+     * GET /v1/domains/{id} only: how the live value compares with the expected one. Null for the inbound MX record.
+     */
+    live_check?: 'match' | 'mismatch' | 'missing' | 'needs_include' | 'multiple_spf_records' | 'invalid_spf' | null;
+    /**
+     * Same as actual_value, for older clients
+     *
+     * @deprecated
+     */
+    actualValue?: string | null;
+    /**
+     * Same as live_check, for older clients
+     *
+     * @deprecated
+     */
+    liveCheck?: string | null;
 };
 
 export type CreateApiKeyRequest = {
@@ -1965,12 +2334,12 @@ export type SendEmailError = SendEmailErrors[keyof SendEmailErrors];
 
 export type SendEmailResponses = {
     /**
-     * Email queued successfully
+     * Email accepted. A repeat with the same Idempotency-Key and body returns the same id.
      */
-    200: Email;
+    200: SendEmailResponse;
 };
 
-export type SendEmailResponse = SendEmailResponses[keyof SendEmailResponses];
+export type SendEmailResponse2 = SendEmailResponses[keyof SendEmailResponses];
 
 export type SendEmailBatchData = {
     body: BatchSendRequest;
@@ -2315,21 +2684,48 @@ export type GetEmailMetricsResponses = {
      * Metrics
      */
     200: {
-        object?: string;
-        start_date?: string;
-        end_date?: string;
-        timezone?: string;
-        metrics?: Array<string>;
-        dimensions?: Array<string>;
-        granularity?: string;
-        totals?: {
+        object: string;
+        start_date: string;
+        end_date: string;
+        timezone: string;
+        metrics: Array<string>;
+        dimensions: Array<'period' | 'domain' | 'email' | 'broadcast'>;
+        granularity: 'hourly' | 'daily' | 'weekly' | 'monthly';
+        /**
+         * One value per requested metric: counts are integers, rates percentages with one decimal.
+         */
+        totals: {
             [key: string]: number;
         };
         /**
-         * One row per combination of the requested dimensions. Absent when no dimensions are requested.
+         * One row per combination of the requested dimensions, with the requested metrics. Absent when no dimensions are requested.
          */
         data?: Array<{
-            [key: string]: unknown;
+            /**
+             * With the period dimension
+             */
+            period?: string | null;
+            /**
+             * With the domain dimension
+             */
+            domain_id?: string | null;
+            /**
+             * With the domain dimension
+             */
+            domain_name?: string | null;
+            /**
+             * With the email dimension
+             */
+            email_id?: string | null;
+            /**
+             * With the broadcast dimension
+             */
+            broadcast_id?: string | null;
+            /**
+             * With the broadcast dimension
+             */
+            broadcast_name?: string | null;
+            [key: string]: number | string | null | string | null | string | null | string | null | string | null | string | null | undefined;
         }>;
     };
 };
@@ -4531,6 +4927,10 @@ export type ListContactsData = {
          * Number of contacts to return
          */
         limit?: number;
+        /**
+         * Page number, starting at 1
+         */
+        page?: number;
     };
     url: '/v1/contacts';
 };
@@ -4566,7 +4966,7 @@ export type ListContactsResponses = {
 export type ListContactsResponse = ListContactsResponses[keyof ListContactsResponses];
 
 export type CreateContactData = {
-    body: CreateContactRequest;
+    body: CreateContactRequest | CreateContactBatchRequest;
     path?: never;
     query?: never;
     url: '/v1/contacts';
@@ -4607,9 +5007,9 @@ export type CreateContactError = CreateContactErrors[keyof CreateContactErrors];
 
 export type CreateContactResponses = {
     /**
-     * Contact created
+     * Contact created. The bulk form returns the created and updated contacts as a list.
      */
-    201: ContactCreated;
+    201: ContactCreated | ContactBatchCreated;
 };
 
 export type CreateContactResponse = CreateContactResponses[keyof CreateContactResponses];
@@ -4659,7 +5059,7 @@ export type ExportContactsResponses = {
     /**
      * Contacts export
      */
-    200: ContactList;
+    200: ContactExport;
 };
 
 export type ExportContactsResponse = ExportContactsResponses[keyof ExportContactsResponses];
@@ -4946,7 +5346,7 @@ export type ListSegmentContactsResponses = {
     /**
      * Contacts in the segment
      */
-    200: ContactList;
+    200: SegmentContactList;
 };
 
 export type ListSegmentContactsResponse = ListSegmentContactsResponses[keyof ListSegmentContactsResponses];
@@ -6122,7 +6522,7 @@ export type GetBroadcastResponses = {
     /**
      * Broadcast details
      */
-    200: Broadcast;
+    200: BroadcastDetail;
 };
 
 export type GetBroadcastResponse = GetBroadcastResponses[keyof GetBroadcastResponses];
@@ -6368,6 +6768,10 @@ export type DuplicateBroadcastResponse = DuplicateBroadcastResponses[keyof Dupli
 export type SendBroadcastData = {
     body?: {
         scheduled_at?: string;
+        /**
+         * Not in Resend. Spread the send evenly over this many minutes from the send time (or scheduled_at): recipient i of N goes out at start + i * window / N. 0 sends to everyone at once. 15 to 4320 (72 hours). Useful on a new sending domain or during the first week's warm-up, where each hour of the window must fit the hourly cap; the daily cap still counts the whole send. Left out, the broadcast's saved send_over_minutes applies; given, it is saved on the broadcast. The window must end within 30 days.
+         */
+        send_over_minutes?: number;
     };
     path: {
         /**
@@ -6412,7 +6816,7 @@ export type SendBroadcastResponses = {
     /**
      * Broadcast queued or scheduled
      */
-    200: Broadcast;
+    200: BroadcastSendResult;
 };
 
 export type SendBroadcastResponse = SendBroadcastResponses[keyof SendBroadcastResponses];
@@ -6518,7 +6922,14 @@ export type SendBroadcastTestResponses = {
     /**
      * Test email queued
      */
-    200: Email;
+    200: {
+        object: string;
+        /**
+         * The test email, in GET /v1/emails/{id}
+         */
+        id: string;
+        status: string;
+    };
 };
 
 export type SendBroadcastTestResponse = SendBroadcastTestResponses[keyof SendBroadcastTestResponses];
@@ -7431,7 +7842,11 @@ export type RevokeApiKeyResponses = {
      * API key revoked
      */
     200: {
-        success?: boolean;
+        success: boolean;
+        /**
+         * "Connected app disconnected" for a connected app's key
+         */
+        message: string;
     };
 };
 
