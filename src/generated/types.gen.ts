@@ -2004,6 +2004,87 @@ export type AudienceMeta = {
     [key: string]: unknown;
 };
 
+export type LinkDomainError = {
+    error: string;
+    code?: 'invalid_hostname' | 'reserved_hostname' | 'no_matching_domain' | 'domain_not_verified' | 'link_domain_exists' | 'link_domains_unavailable' | 'link_domains_at_capacity' | 'plan_upgrade_required' | 'cloudflare_error';
+};
+
+export type CreateLinkDomainRequest = {
+    /**
+     * A subdomain of one of your verified sending domains. One link domain per sending domain.
+     */
+    hostname: string;
+};
+
+export type LinkDomainDnsRecord = {
+    type: 'CNAME' | 'TXT';
+    name: string;
+    value: string;
+    ttl: string;
+    purpose: string;
+    /**
+     * The CNAME is required. A TXT record Cloudflare offers is optional: it lets the hostname activate before the CNAME is live.
+     */
+    required: boolean;
+    /**
+     * pending while the link domain is not active. Once it is active the CNAME is verified (keep it: certificate renewals need it) and a TXT record is not_needed, so you can remove it.
+     */
+    status: 'pending' | 'verified' | 'not_needed';
+};
+
+/**
+ * A custom hostname for open tracking, click tracking and unsubscribe links. While it is active, email whose From address is on the same registrable domain uses it instead of smtpfa.st, in the body and in the List-Unsubscribe header.
+ */
+export type LinkDomain = {
+    object: string;
+    id: string;
+    hostname: string;
+    /**
+     * The sending domain the hostname sits under.
+     */
+    domain_id: string | null;
+    domain: string | null;
+    /**
+     * pending until Cloudflare sees the CNAME record and issues the certificate, then active. failed means it will not become active without a change on your side (last_error says why); fix it and refresh. Mail uses the link domain only while it is active.
+     */
+    status: 'pending' | 'active' | 'failed';
+    /**
+     * The certificate status Cloudflare reports, for troubleshooting.
+     */
+    ssl_status: string | null;
+    /**
+     * Why the link domain is not active yet, when Cloudflare says.
+     */
+    last_error: string | null;
+    dns_records: Array<LinkDomainDnsRecord>;
+    /**
+     * When it first became active.
+     */
+    verified_at: string | null;
+    last_checked_at: string | null;
+    created_at: string;
+};
+
+export type LinkDomainList = {
+    object: string;
+    has_more: boolean;
+    data: Array<LinkDomain>;
+    /**
+     * Whether custom link domains are available on this server. When false, creating one answers 503.
+     */
+    available: boolean;
+    /**
+     * Whether the team's plan includes custom link domains (every paid plan). When false, creating one answers 403 and mail uses smtpfa.st links, also through a link domain added earlier.
+     */
+    included_in_plan: boolean;
+};
+
+export type LinkDomainDeleted = {
+    object: string;
+    id: string;
+    deleted: boolean;
+};
+
 export type TemplateVariableWritable = {
     /**
      * Use it in the content as {{{KEY}}}. Letters, digits and underscores. FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL, RESEND_UNSUBSCRIBE_URL, contact and this are reserved.
@@ -8819,6 +8900,246 @@ export type StartCloudflareInboundDomainConnectResponses = {
 };
 
 export type StartCloudflareInboundDomainConnectResponse = StartCloudflareInboundDomainConnectResponses[keyof StartCloudflareInboundDomainConnectResponses];
+
+export type ListLinkDomainsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/link-domains';
+};
+
+export type ListLinkDomainsErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type ListLinkDomainsError = ListLinkDomainsErrors[keyof ListLinkDomainsErrors];
+
+export type ListLinkDomainsResponses = {
+    /**
+     * Link domains
+     */
+    200: LinkDomainList;
+};
+
+export type ListLinkDomainsResponse = ListLinkDomainsResponses[keyof ListLinkDomainsResponses];
+
+export type CreateLinkDomainData = {
+    body: CreateLinkDomainRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/link-domains';
+};
+
+export type CreateLinkDomainErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: LinkDomainError;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: LinkDomainError;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: LinkDomainError;
+    /**
+     * The request is well formed but cannot be carried out in the current state, for example an unpublished template
+     */
+    422: LinkDomainError;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Error
+     */
+    502: LinkDomainError;
+    /**
+     * Error
+     */
+    503: LinkDomainError;
+};
+
+export type CreateLinkDomainError = CreateLinkDomainErrors[keyof CreateLinkDomainErrors];
+
+export type CreateLinkDomainResponses = {
+    /**
+     * The link domain, pending until the CNAME record is in place
+     */
+    201: LinkDomain;
+};
+
+export type CreateLinkDomainResponse = CreateLinkDomainResponses[keyof CreateLinkDomainResponses];
+
+export type DeleteLinkDomainData = {
+    body?: never;
+    path: {
+        /**
+         * The link domain ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/link-domains/{id}';
+};
+
+export type DeleteLinkDomainErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type DeleteLinkDomainError = DeleteLinkDomainErrors[keyof DeleteLinkDomainErrors];
+
+export type DeleteLinkDomainResponses = {
+    /**
+     * Deleted
+     */
+    200: LinkDomainDeleted;
+};
+
+export type DeleteLinkDomainResponse = DeleteLinkDomainResponses[keyof DeleteLinkDomainResponses];
+
+export type GetLinkDomainData = {
+    body?: never;
+    path: {
+        /**
+         * The link domain ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/link-domains/{id}';
+};
+
+export type GetLinkDomainErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type GetLinkDomainError = GetLinkDomainErrors[keyof GetLinkDomainErrors];
+
+export type GetLinkDomainResponses = {
+    /**
+     * The link domain
+     */
+    200: LinkDomain;
+};
+
+export type GetLinkDomainResponse = GetLinkDomainResponses[keyof GetLinkDomainResponses];
+
+export type RefreshLinkDomainData = {
+    body?: never;
+    path: {
+        /**
+         * The link domain ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/link-domains/{id}/refresh';
+};
+
+export type RefreshLinkDomainErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Error
+     */
+    502: LinkDomainError;
+    /**
+     * Error
+     */
+    503: LinkDomainError;
+};
+
+export type RefreshLinkDomainError = RefreshLinkDomainErrors[keyof RefreshLinkDomainErrors];
+
+export type RefreshLinkDomainResponses = {
+    /**
+     * The link domain with its current status
+     */
+    200: LinkDomain;
+};
+
+export type RefreshLinkDomainResponse = RefreshLinkDomainResponses[keyof RefreshLinkDomainResponses];
 
 export type PreviewFormWelcomeEmailData = {
     body?: {
