@@ -503,6 +503,23 @@ export function createResources(core: Core) {
           core.call(sdk.approvePendingSignup, { path: { id, pendingId } }, options),
       },
     },
+    linkDomains: {
+      /** List link domains. `GET /v1/link-domains` */
+      list: (options?: RequestOptions): Promise<Result<T.ListLinkDomainsResponses>> =>
+        core.call(sdk.listLinkDomains, {}, options),
+      /** Add a link domain. `POST /v1/link-domains` */
+      create: (body: T.CreateLinkDomainData["body"], options?: RequestOptions): Promise<Result<T.CreateLinkDomainResponses>> =>
+        core.call(sdk.createLinkDomain, { body }, options),
+      /** Get a link domain. `GET /v1/link-domains/{id}` */
+      get: (id: string, options?: RequestOptions): Promise<Result<T.GetLinkDomainResponses>> =>
+        core.call(sdk.getLinkDomain, { path: { id } }, options),
+      /** Delete a link domain. `DELETE /v1/link-domains/{id}` */
+      delete: (id: string, options?: RequestOptions): Promise<Result<T.DeleteLinkDomainResponses>> =>
+        core.call(sdk.deleteLinkDomain, { path: { id } }, options),
+      /** Refresh a link domain's status. `POST /v1/link-domains/{id}/refresh` */
+      refresh: (id: string, options?: RequestOptions): Promise<Result<T.RefreshLinkDomainResponses>> =>
+        core.call(sdk.refreshLinkDomain, { path: { id } }, options),
+    },
     analytics: {
       /** Get analytics. `GET /v1/analytics` */
       get: (query?: T.GetAnalyticsData["query"], options?: RequestOptions): Promise<Result<T.GetAnalyticsResponses>> =>
