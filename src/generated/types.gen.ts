@@ -424,6 +424,14 @@ export type SendEmailRequest = {
      */
     category?: 'transactional' | 'marketing';
     /**
+     * Not in Resend, which sets tracking per domain. Rewrite this email's links through the click tracker (true) or send them exactly as written (false). Left out, the account's tracking settings apply, including the setting for transactional email. Over SMTP, set the X-SMTPfast-Track-Clicks header to true or false instead; it is removed before sending. To keep one link out of tracking, such as a password reset link with a token, add data-smtpfast-track="off" to its <a> tag; the attribute is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400.
+     */
+    track_clicks?: boolean;
+    /**
+     * Not in Resend. Add the open-tracking pixel to this email (true) or not (false). Left out, the account's tracking settings apply. Over SMTP, set the X-SMTPfast-Track-Opens header to true or false instead; it is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400.
+     */
+    track_opens?: boolean;
+    /**
      * HTML body of the email. Include `{{unsubscribe_url}}` (or the Resend-compatible `{{{RESEND_UNSUBSCRIBE_URL}}}`) anywhere in the body and SMTPfast substitutes the per-recipient unsubscribe link at send time. An email with the placeholder is always marketing, and a marketing email gets the same URL on the RFC 8058 `List-Unsubscribe` header.
      */
     html?: string;
