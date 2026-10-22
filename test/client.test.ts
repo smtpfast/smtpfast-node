@@ -33,6 +33,14 @@ describe("requests", () => {
     expect(calls[0].url.pathname).toBe("/api/v1/inboxes/in%201/threads/th_2/emails/em%2F3/reply");
   });
 
+  it("rejects an empty or dot path parameter before any request", async () => {
+    const { client, calls } = mockClient([]);
+    for (const id of ["", ".", "..", [".."], { toString: () => ".." }, null, undefined]) {
+      await expect(client.emails.get(id as string)).rejects.toThrow(SMTPfastError);
+    }
+    expect(calls).toHaveLength(0);
+  });
+
   it("sends query parameters", async () => {
     const { client, calls } = mockClient([json({ data: [], has_more: false })]);
     await client.emails.list({ limit: 5, after: "em_9" });

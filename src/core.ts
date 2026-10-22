@@ -81,6 +81,7 @@ export class Core {
 
   /** Make one API call and return the parsed body, or throw an APIError. */
   async call<R>(fn: SdkFn, args: object, options: RequestOptions = {}, idempotent = false): Promise<R> {
+    checkPath((args as { path?: Record<string, unknown> }).path);
     const maxRetries = options.maxRetries ?? this.#maxRetries;
     const headers: Record<string, string> = { ...options.headers };
     if (idempotent) {
@@ -142,6 +143,17 @@ export class Core {
 }
 
 /** How long to wait before retrying this response, or null for no retry. */
+// An id of "", "." or ".." would become a dot-segment that the URL parser
+// resolves, so the request would reach a different endpoint.
+function checkPath(path: Record<string, unknown> | undefined): void {
+  for (const [name, value] of Object.entries(path ?? {})) {
+    const text = typeof value === "string" || (typeof value === "number" && Number.isFinite(value)) ? String(value) : null;
+    if (text === null || text === "" || text === "." || text === "..") {
+      throw new SMTPfastError(`Invalid path parameter ${name}: ${JSON.stringify(value) ?? String(value)}`);
+    }
+  }
+}
+
 function retryDelay(response: Response, attempt: number, retryable: boolean): number | null {
   if (!RETRY_STATUS.has(response.status)) return null;
   const header = response.headers.get("Retry-After");

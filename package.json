@@ -1,6 +1,6 @@
 {
   "name": "@smtpfast/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The official SMTPfast SDK for Node.js and TypeScript.",
   "license": "MIT",
   "type": "module",
