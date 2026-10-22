@@ -1,7 +1,8 @@
 name: Release
 
 # Publish to npm when a GitHub release is published. The tag is the version,
-# for example v0.2.0; it must match package.json.
+# for example v0.2.0; it must match package.json. npm trusted publishing signs
+# in with the GitHub OIDC token (id-token: write), so no npm token is stored.
 on:
   release:
     types: [published]
@@ -25,6 +26,6 @@ jobs:
         run: test "v$(node -p 'require("./package.json").version')" = "${GITHUB_REF_NAME}"
       - run: npm test
       - run: npm run build
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@^11.5.1
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
