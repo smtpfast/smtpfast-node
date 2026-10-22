@@ -424,7 +424,7 @@ export type SendEmailRequest = {
      */
     category?: 'transactional' | 'marketing';
     /**
-     * Not in Resend, which sets tracking per domain. Rewrite this email's links through the click tracker (true) or send them exactly as written (false). Left out, the account's tracking settings apply, including the setting for transactional email. Over SMTP, set the X-SMTPfast-Track-Clicks header to true or false instead; it is removed before sending. To keep one link out of tracking, such as a password reset link with a token, add data-smtpfast-track="off" to its <a> tag; the attribute is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400.
+     * Not in Resend, which sets tracking per domain. Rewrite this email's links through the click tracker (true) or send them exactly as written (false). Left out, the account's tracking settings apply, including the setting for transactional email, except that a contact-form relay (every recipient on the From domain or a parent or subdomain of it, Reply-To on an unrelated domain, not sent from an inbox) gets no click tracking. Over SMTP, set the X-SMTPfast-Track-Clicks header to true or false instead; it is removed before sending. To keep one link out of tracking, such as a password reset link with a token, add data-smtpfast-track="off" to its <a> tag; the attribute is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400.
      */
     track_clicks?: boolean;
     /**
@@ -948,13 +948,20 @@ export type BroadcastList = {
     page?: number;
     page_size?: number;
     /**
-     * Broadcasts matching the status filter
+     * Broadcasts matching the status, search and archived filters
      */
     filtered_total?: number;
     /**
-     * Every broadcast of the team
+     * Every broadcast of the team that is not archived
      */
     total?: number;
+    /**
+     * Archived broadcasts of the team
+     */
+    archived_total?: number;
+    /**
+     * Broadcasts that are not archived, per status
+     */
     status_counts?: {
         [key: string]: number;
     };
@@ -966,6 +973,10 @@ export type Broadcast = {
     name: string;
     audience?: string;
     audience_meta?: AudienceMeta;
+    /**
+     * The segment the broadcast goes to when audience is segment, otherwise null
+     */
+    segment_id?: string | null;
     from?: string | null;
     reply_to?: string | null;
     subject?: string | null;
@@ -978,6 +989,10 @@ export type Broadcast = {
     queued_at?: string | null;
     sent_at?: string | null;
     canceled_at?: string | null;
+    /**
+     * When the broadcast was archived. Archived broadcasts are left out of the list unless archived=true or archived=all.
+     */
+    archived_at?: string | null;
     /**
      * Set when the campaign was stopped mid-send by the deliverability guard
      */
@@ -1529,6 +1544,10 @@ export type DomainListItem = {
     id: string;
     domain: string;
     /**
+     * Same as domain. Resend calls this field name.
+     */
+    name?: string;
+    /**
      * pending, verifying, verified or failed
      */
     status: string;
@@ -1550,6 +1569,10 @@ export type DomainListItem = {
 export type Domain = {
     id: string;
     domain: string;
+    /**
+     * Same as domain. Resend calls this field name.
+     */
+    name?: string;
     /**
      * GET /v1/domains/{id} answers pending for a verified domain whose required records are no longer live.
      */
@@ -2085,6 +2108,29 @@ export type LinkDomainList = {
      * Whether the team's plan includes custom link domains (every paid plan). When false, creating one answers 403 and mail uses smtpfa.st links, also through a link domain added earlier.
      */
     included_in_plan: boolean;
+};
+
+export type LinkDomainConnectCheck = {
+    /**
+     * Whether the DNS provider can add the CNAME record in one click through Domain Connect.
+     */
+    available: boolean;
+    /**
+     * The DNS provider, when discovery found one.
+     */
+    provider: string | null;
+    /**
+     * Why one-click setup is not available, when it is not.
+     */
+    reason: string | null;
+};
+
+export type LinkDomainConnectLink = {
+    /**
+     * The signed link to open. The DNS provider shows the CNAME record and asks the domain owner to approve it.
+     */
+    url: string;
+    provider: string;
 };
 
 export type LinkDomainDeleted = {
@@ -4997,7 +5043,7 @@ export type ListContactsData = {
     path?: never;
     query?: {
         /**
-         * Search by email, first name, or last name
+         * Search by email, first name, or last name. Several email addresses separated by commas, spaces or new lines are matched exactly, up to 100.
          */
         q?: string;
         /**
@@ -6445,6 +6491,10 @@ export type ListBroadcastsData = {
          * Search by campaign name, subject, or sender
          */
         q?: string;
+        /**
+         * false leaves archived broadcasts out, true lists only archived ones, all lists both
+         */
+        archived?: 'false' | 'true' | 'all';
     };
     url: '/v1/broadcasts';
 };
@@ -6959,6 +7009,102 @@ export type CancelBroadcastResponses = {
 };
 
 export type CancelBroadcastResponse = CancelBroadcastResponses[keyof CancelBroadcastResponses];
+
+export type ArchiveBroadcastData = {
+    body?: never;
+    path: {
+        /**
+         * The broadcast ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/broadcasts/{id}/archive';
+};
+
+export type ArchiveBroadcastErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type ArchiveBroadcastError = ArchiveBroadcastErrors[keyof ArchiveBroadcastErrors];
+
+export type ArchiveBroadcastResponses = {
+    /**
+     * Broadcast archived
+     */
+    200: Broadcast;
+};
+
+export type ArchiveBroadcastResponse = ArchiveBroadcastResponses[keyof ArchiveBroadcastResponses];
+
+export type UnarchiveBroadcastData = {
+    body?: never;
+    path: {
+        /**
+         * The broadcast ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/broadcasts/{id}/unarchive';
+};
+
+export type UnarchiveBroadcastErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type UnarchiveBroadcastError = UnarchiveBroadcastErrors[keyof UnarchiveBroadcastErrors];
+
+export type UnarchiveBroadcastResponses = {
+    /**
+     * Broadcast unarchived
+     */
+    200: Broadcast;
+};
+
+export type UnarchiveBroadcastResponse = UnarchiveBroadcastResponses[keyof UnarchiveBroadcastResponses];
 
 export type SendBroadcastTestData = {
     body: {
@@ -9094,6 +9240,102 @@ export type GetLinkDomainResponses = {
 };
 
 export type GetLinkDomainResponse = GetLinkDomainResponses[keyof GetLinkDomainResponses];
+
+export type GetLinkDomainDomainConnectData = {
+    body?: never;
+    path: {
+        /**
+         * The link domain ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/link-domains/{id}/domain-connect';
+};
+
+export type GetLinkDomainDomainConnectErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type GetLinkDomainDomainConnectError = GetLinkDomainDomainConnectErrors[keyof GetLinkDomainDomainConnectErrors];
+
+export type GetLinkDomainDomainConnectResponses = {
+    /**
+     * Whether one-click setup is available
+     */
+    200: LinkDomainConnectCheck;
+};
+
+export type GetLinkDomainDomainConnectResponse = GetLinkDomainDomainConnectResponses[keyof GetLinkDomainDomainConnectResponses];
+
+export type StartLinkDomainDomainConnectData = {
+    body?: never;
+    path: {
+        /**
+         * The link domain ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/link-domains/{id}/domain-connect';
+};
+
+export type StartLinkDomainDomainConnectErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type StartLinkDomainDomainConnectError = StartLinkDomainDomainConnectErrors[keyof StartLinkDomainDomainConnectErrors];
+
+export type StartLinkDomainDomainConnectResponses = {
+    /**
+     * The link to open
+     */
+    200: LinkDomainConnectLink;
+};
+
+export type StartLinkDomainDomainConnectResponse = StartLinkDomainDomainConnectResponses[keyof StartLinkDomainDomainConnectResponses];
 
 export type RefreshLinkDomainData = {
     body?: never;
