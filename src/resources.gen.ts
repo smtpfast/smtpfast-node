@@ -329,6 +329,12 @@ export function createResources(core: Core) {
       /** Cancel a scheduled broadcast. `POST /v1/broadcasts/{id}/cancel` */
       cancel: (id: string, options?: RequestOptions): Promise<Result<T.CancelBroadcastResponses>> =>
         core.call(sdk.cancelBroadcast, { path: { id } }, options),
+      /** Archive a broadcast. `POST /v1/broadcasts/{id}/archive` */
+      archive: (id: string, options?: RequestOptions): Promise<Result<T.ArchiveBroadcastResponses>> =>
+        core.call(sdk.archiveBroadcast, { path: { id } }, options),
+      /** Unarchive a broadcast. `POST /v1/broadcasts/{id}/unarchive` */
+      unarchive: (id: string, options?: RequestOptions): Promise<Result<T.UnarchiveBroadcastResponses>> =>
+        core.call(sdk.unarchiveBroadcast, { path: { id } }, options),
       /** Send a test broadcast email. `POST /v1/broadcasts/{id}/test` */
       sendTest: (id: string, body: T.SendBroadcastTestData["body"], options?: RequestOptions): Promise<Result<T.SendBroadcastTestResponses>> =>
         core.call(sdk.sendBroadcastTest, { path: { id }, body }, options),
@@ -516,6 +522,12 @@ export function createResources(core: Core) {
       /** Delete a link domain. `DELETE /v1/link-domains/{id}` */
       delete: (id: string, options?: RequestOptions): Promise<Result<T.DeleteLinkDomainResponses>> =>
         core.call(sdk.deleteLinkDomain, { path: { id } }, options),
+      /** Check one-click DNS setup for a link domain. `GET /v1/link-domains/{id}/domain-connect` */
+      getDomainConnect: (id: string, options?: RequestOptions): Promise<Result<T.GetLinkDomainDomainConnectResponses>> =>
+        core.call(sdk.getLinkDomainDomainConnect, { path: { id } }, options),
+      /** Set up a link domain's DNS in one click. `POST /v1/link-domains/{id}/domain-connect` */
+      startDomainConnect: (id: string, options?: RequestOptions): Promise<Result<T.StartLinkDomainDomainConnectResponses>> =>
+        core.call(sdk.startLinkDomainDomainConnect, { path: { id } }, options),
       /** Refresh a link domain's status. `POST /v1/link-domains/{id}/refresh` */
       refresh: (id: string, options?: RequestOptions): Promise<Result<T.RefreshLinkDomainResponses>> =>
         core.call(sdk.refreshLinkDomain, { path: { id } }, options),
