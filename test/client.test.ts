@@ -35,8 +35,8 @@ describe("requests", () => {
 
   it("rejects an empty or dot path parameter before any request", async () => {
     const { client, calls } = mockClient([]);
-    for (const id of ["", ".", ".."]) {
-      await expect(client.emails.get(id)).rejects.toThrow(SMTPfastError);
+    for (const id of ["", ".", "..", [".."], { toString: () => ".." }, null, undefined]) {
+      await expect(client.emails.get(id as string)).rejects.toThrow(SMTPfastError);
     }
     expect(calls).toHaveLength(0);
   });

@@ -147,8 +147,9 @@ export class Core {
 // resolves, so the request would reach a different endpoint.
 function checkPath(path: Record<string, unknown> | undefined): void {
   for (const [name, value] of Object.entries(path ?? {})) {
-    if (value === "" || value === "." || value === "..") {
-      throw new SMTPfastError(`Invalid path parameter ${name}: ${JSON.stringify(value)}`);
+    const text = typeof value === "string" || (typeof value === "number" && Number.isFinite(value)) ? String(value) : null;
+    if (text === null || text === "" || text === "." || text === "..") {
+      throw new SMTPfastError(`Invalid path parameter ${name}: ${JSON.stringify(value) ?? String(value)}`);
     }
   }
 }
