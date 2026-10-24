@@ -125,7 +125,7 @@ export const shareEmail = <ThrowOnError extends boolean = false>(options: Option
 /**
  * Retrieve email metrics
  *
- * Resend-compatible counts and rates over a date range, for transactional and broadcast email together. Leave dimensions out for one totals row; add period, domain, email or broadcast (email and broadcast cannot be combined) to break the numbers down. Each lifecycle timestamp counts in its own period. Sends where every recipient is the SES mailbox simulator are left out. Rates are percentages with one decimal. Open and click metrics need tracking on. Requires the email:read scope.
+ * Resend-compatible counts and rates over a date range, for transactional and broadcast email together. Leave dimensions out for one totals row; add period, domain, email or broadcast (email and broadcast cannot be combined) to break the numbers down. Each lifecycle timestamp counts in its own period. Sends where every recipient is the SES mailbox simulator are left out. Rates are percentages with one decimal. Open and click metrics need tracking on. Add include=providers for a breakdown by mailbox provider (Gmail, Outlook, iCloud, Yahoo, Proton, other). Requires the email:read scope.
  */
 export const getEmailMetrics = <ThrowOnError extends boolean = false>(options?: Options<GetEmailMetricsData, ThrowOnError>): RequestResult<GetEmailMetricsResponses, GetEmailMetricsErrors, ThrowOnError> => (options?.client ?? client).get<GetEmailMetricsResponses, GetEmailMetricsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

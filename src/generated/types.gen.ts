@@ -395,7 +395,7 @@ export type SendEmailRequest = {
      */
     bcc?: string | Array<string>;
     /**
-     * Reply-To address or addresses
+     * Reply-To address or addresses, up to 50. Every address goes in the Reply-To header.
      */
     reply_to?: string | Array<string>;
     /**
@@ -485,7 +485,7 @@ export type Email = {
     category: 'transactional' | 'marketing';
     status: 'queued' | 'scheduled' | 'sending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'complained' | 'failed' | 'canceled';
     /**
-     * The Reply-To address the email was sent with, or null.
+     * The Reply-To address the email was sent with, or the first one when it had several, or null.
      */
     reply_to: string | null;
     /**
@@ -697,6 +697,9 @@ export type ContactList = {
      * The plan's contact limit without overrides
      */
     contact_limit_base?: number;
+    /**
+     * The plan: free, starter, growth or scale.
+     */
     tier?: string;
 };
 
@@ -813,6 +816,9 @@ export type SegmentList = {
     data: Array<SegmentSummary>;
     total: number;
     segment_limit: number;
+    /**
+     * The plan: free, starter, growth or scale.
+     */
     tier?: string;
 };
 
@@ -1098,6 +1104,52 @@ export type BroadcastMetrics = {
     click_rate?: number;
     unsubscribe_rate?: number;
     bounce_rate?: number;
+};
+
+/**
+ * Sent email to one mailbox provider. Each email counts once, by the domain of its first To address; a domain outside the consumer domains is classified by its MX hosts, so Google Workspace counts as gmail and Microsoft 365 as outlook. Rates are percentages with two decimals, null when there is nothing to rate yet.
+ */
+export type MailboxProviderMetrics = {
+    provider: 'gmail' | 'outlook' | 'icloud' | 'yahoo' | 'proton' | 'other';
+    name: string;
+    /**
+     * Handed to SES: sent, delivered, opened, clicked, bounced or complained.
+     */
+    sent: number;
+    /**
+     * Percent of all sent email in the breakdown.
+     */
+    share: number;
+    /**
+     * Accepted by the receiving server, complained included.
+     */
+    delivered: number;
+    bounced: number;
+    complained: number;
+    /**
+     * Delivered with open tracking on: the open rate's denominator.
+     */
+    tracked_delivered: number;
+    /**
+     * Of tracked_delivered, opened at least once.
+     */
+    opened: number;
+    /**
+     * delivered / (delivered + bounced): over emails with a delivery or bounce report.
+     */
+    delivery_rate: number | null;
+    /**
+     * opened / tracked_delivered. Apple Mail Privacy Protection loads the open pixel before anyone reads the email, so the icloud rate reads high.
+     */
+    open_rate: number | null;
+    /**
+     * bounced / (delivered + bounced).
+     */
+    bounce_rate: number | null;
+    /**
+     * complained / delivered.
+     */
+    complaint_rate: number | null;
 };
 
 export type TemplateVariable = {
@@ -1993,6 +2045,9 @@ export type Analytics = {
         delivered?: number;
         bounced?: number;
         limit?: number;
+        /**
+         * The plan: free, starter, growth or scale.
+         */
         tier?: string;
     };
     /**
@@ -2785,6 +2840,10 @@ export type GetEmailMetricsData = {
          * Comma-separated broadcast ids, up to 100. Not with email.
          */
         broadcast_id?: string;
+        /**
+         * providers adds a providers array: sent email by the recipient's mailbox provider over the range and the id filters, each email counted once by its first To address, by the time it was created and its current status. Not part of Resend's API.
+         */
+        include?: 'providers';
     };
     url: '/v1/emails/metrics';
 };
@@ -2862,6 +2921,10 @@ export type GetEmailMetricsResponses = {
             broadcast_name?: string | null;
             [key: string]: number | string | null | string | null | string | null | string | null | string | null | string | null | undefined;
         }>;
+        /**
+         * With include=providers: one row per mailbox provider with at least one sent email, most sent first. A recipient domain not classified yet counts as other for that request (up to 50 new domains are looked up per request).
+         */
+        providers?: Array<MailboxProviderMetrics>;
     };
 };
 
@@ -5666,6 +5729,9 @@ export type GetCapabilitiesResponses = {
         team_id: string | null;
         team_sending_status: string | null;
         account: {
+            /**
+             * The plan: free, starter, growth or scale.
+             */
             tier?: string;
             status?: string;
         };
