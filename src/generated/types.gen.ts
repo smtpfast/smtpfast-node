@@ -162,6 +162,29 @@ export type InboxThread = {
      * When a thread in trash is removed. Not in Resend.
      */
     delete_after?: string | null;
+    /**
+     * The team member the thread is assigned to. Not in Resend's thread object.
+     */
+    assignee_email?: string | null;
+};
+
+/**
+ * An internal note on a thread. Never sent to anyone. Not in Resend.
+ */
+export type InboxThreadNote = {
+    object?: string;
+    id?: string;
+    thread_id?: string;
+    /**
+     * Plain text, as written
+     */
+    text?: string;
+    /**
+     * The member who wrote it; null once their account is deleted
+     */
+    author_email?: string | null;
+    created_via?: 'api' | 'dashboard';
+    created_at?: string;
 };
 
 export type InboxThreadListItem = {
@@ -192,6 +215,10 @@ export type InboxThreadListItem = {
      * A preview of the most recent message. Not in Resend.
      */
     snippet?: string | null;
+    /**
+     * The team member the thread is assigned to. Not in Resend.
+     */
+    assignee_email?: string | null;
 };
 
 export type InboxThreadEmail = {
@@ -258,6 +285,10 @@ export type InboxDraft = {
     subject?: string | null;
     html?: string | null;
     text?: string | null;
+    /**
+     * The files stored on the draft, in the order they are sent. Download one with GET /v1/inboxes/{inbox_id}/drafts/{draft_id}/attachments/{attachment_id}.
+     */
+    attachments?: Array<InboxDraftAttachment>;
     thread_id?: string | null;
     reply_to_email_id?: string | null;
     /**
@@ -282,6 +313,24 @@ export type InboxDraft = {
      * The subject of the thread a reply draft answers. Not in Resend.
      */
     thread_subject?: string | null;
+};
+
+export type InboxDraftAttachment = {
+    id?: string;
+    filename?: string;
+    /**
+     * Bytes
+     */
+    size?: number;
+    content_type?: string | null;
+};
+
+export type InboxDraftAttachmentDownload = InboxDraftAttachment & {
+    /**
+     * Works until expires_at
+     */
+    download_url?: string;
+    expires_at?: string;
 };
 
 export type InboxDraftListItem = {
@@ -395,7 +444,7 @@ export type SendEmailRequest = {
      */
     bcc?: string | Array<string>;
     /**
-     * Reply-To address or addresses
+     * Reply-To address or addresses, up to 50. Every address goes in the Reply-To header.
      */
     reply_to?: string | Array<string>;
     /**
@@ -485,7 +534,7 @@ export type Email = {
     category: 'transactional' | 'marketing';
     status: 'queued' | 'scheduled' | 'sending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'complained' | 'failed' | 'canceled';
     /**
-     * The Reply-To address the email was sent with, or null.
+     * The Reply-To address the email was sent with, or the first one when it had several, or null.
      */
     reply_to: string | null;
     /**
@@ -697,6 +746,9 @@ export type ContactList = {
      * The plan's contact limit without overrides
      */
     contact_limit_base?: number;
+    /**
+     * The plan: free, starter, growth or scale.
+     */
     tier?: string;
 };
 
@@ -813,6 +865,9 @@ export type SegmentList = {
     data: Array<SegmentSummary>;
     total: number;
     segment_limit: number;
+    /**
+     * The plan: free, starter, growth or scale.
+     */
     tier?: string;
 };
 
@@ -1098,6 +1153,52 @@ export type BroadcastMetrics = {
     click_rate?: number;
     unsubscribe_rate?: number;
     bounce_rate?: number;
+};
+
+/**
+ * Sent email to one mailbox provider. Each email counts once, by the domain of its first To address; a domain outside the consumer domains is classified by its MX hosts, so Google Workspace counts as gmail and Microsoft 365 as outlook. Rates are percentages with two decimals, null when there is nothing to rate yet.
+ */
+export type MailboxProviderMetrics = {
+    provider: 'gmail' | 'outlook' | 'icloud' | 'yahoo' | 'proton' | 'other';
+    name: string;
+    /**
+     * Handed to SES: sent, delivered, opened, clicked, bounced or complained.
+     */
+    sent: number;
+    /**
+     * Percent of all sent email in the breakdown.
+     */
+    share: number;
+    /**
+     * Accepted by the receiving server, complained included.
+     */
+    delivered: number;
+    bounced: number;
+    complained: number;
+    /**
+     * Delivered with open tracking on: the open rate's denominator.
+     */
+    tracked_delivered: number;
+    /**
+     * Of tracked_delivered, opened at least once.
+     */
+    opened: number;
+    /**
+     * delivered / (delivered + bounced): over emails with a delivery or bounce report.
+     */
+    delivery_rate: number | null;
+    /**
+     * opened / tracked_delivered. Apple Mail Privacy Protection loads the open pixel before anyone reads the email, so the icloud rate reads high.
+     */
+    open_rate: number | null;
+    /**
+     * bounced / (delivered + bounced).
+     */
+    bounce_rate: number | null;
+    /**
+     * complained / delivered.
+     */
+    complaint_rate: number | null;
 };
 
 export type TemplateVariable = {
@@ -1681,7 +1782,7 @@ export type CreateApiKeyRequest = {
      */
     name: string;
     /**
-     * Optional list of scopes to restrict the key. Available: email:send, email:read, domain:read, domain:write, contact:read, contact:write, form:read, form:write, webhook:read, webhook:write, logs:read, inbound:read, inbound:delete, team:read, team:manage, apikey:manage. If omitted the key gets the default set: everything except logs:read, inbound:read, inbound:delete, team:read, team:manage and apikey:manage. Listing, creating or revoking keys through the API requires apikey:manage.
+     * Optional list of scopes to restrict the key. Available: email:send, email:read, domain:read, domain:write, contact:read, contact:write, form:read, form:write, webhook:read, webhook:write, logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage, apikey:manage. If omitted the key gets the default set: everything except logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage and apikey:manage. Listing, creating or revoking keys through the API requires apikey:manage.
      */
     scopes?: Array<string>;
 };
@@ -1756,7 +1857,7 @@ export type CreateWebhookRequest = {
     /**
      * List of event types to subscribe to. Legacy unprefixed email aliases are accepted and normalized to Resend-style email.* event names.
      */
-    events: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed'>;
+    events: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed' | 'inbox.email.received' | 'inbox.thread.assigned' | 'inbox.thread.unassigned'>;
     /**
      * Payload format. standard is the signed JSON envelope; discord and slack post readable messages to a chat webhook URL. Detected from the URL when left out.
      */
@@ -1768,7 +1869,7 @@ export type UpdateWebhookRequest = {
     /**
      * List of event types to subscribe to. Legacy unprefixed email aliases are accepted and normalized to Resend-style email.* event names.
      */
-    events?: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed'>;
+    events?: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed' | 'inbox.email.received' | 'inbox.thread.assigned' | 'inbox.thread.unassigned'>;
     /**
      * Set to false to pause delivery without deleting the webhook
      */
@@ -1828,7 +1929,7 @@ export type WebhookDelivery = {
 export type Webhook = {
     id: string;
     url: string;
-    events: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed'>;
+    events: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed' | 'inbox.email.received' | 'inbox.thread.assigned' | 'inbox.thread.unassigned'>;
     active: boolean;
     format?: 'standard' | 'discord' | 'slack';
     /**
@@ -1845,7 +1946,7 @@ export type Webhook = {
 export type WebhookUpdated = {
     id: string;
     url: string;
-    events: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed'>;
+    events: Array<'email.scheduled' | 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.bounced' | 'email.complained' | 'email.opened' | 'email.clicked' | 'email.failed' | 'email.suppressed' | 'email.unsubscribed' | 'email.received' | 'domain.created' | 'domain.updated' | 'domain.deleted' | 'contact.created' | 'contact.updated' | 'contact.deleted' | 'contact.subscribed' | 'inbox.email.received' | 'inbox.thread.assigned' | 'inbox.thread.unassigned'>;
     format: 'standard' | 'discord' | 'slack';
     active: boolean;
 };
@@ -1993,6 +2094,9 @@ export type Analytics = {
         delivered?: number;
         bounced?: number;
         limit?: number;
+        /**
+         * The plan: free, starter, growth or scale.
+         */
         tier?: string;
     };
     /**
@@ -2137,6 +2241,174 @@ export type LinkDomainDeleted = {
     object: string;
     id: string;
     deleted: boolean;
+};
+
+export type Billing = {
+    object: 'billing';
+    /**
+     * free, starter, growth or scale
+     */
+    plan: string;
+    /**
+     * How the subscription is billed; null without one
+     */
+    interval: 'monthly' | 'yearly' | null;
+    /**
+     * The Stripe subscription status (active, past_due, unpaid and so on); null without a subscription
+     */
+    status: string | null;
+    /**
+     * When the paid plan renews, or ends when it is cancelled
+     */
+    current_period_end: string | null;
+    /**
+     * True when the subscription is cancelled and will not renew
+     */
+    cancel_at_period_end: boolean;
+    /**
+     * When a cancelled subscription ends
+     */
+    cancel_at: string | null;
+    /**
+     * A smaller plan waiting for the end of the paid period
+     */
+    scheduled_change: {
+        plan: string;
+        interval: 'monthly' | 'yearly' | null;
+        effective_at: string;
+    } | null;
+    /**
+     * The last renewal was not paid. past_due: Stripe is still retrying. unpaid: it stopped.
+     */
+    payment_issue: {
+        status: 'past_due' | 'unpaid';
+        /**
+         * Stripe's page for the open invoice
+         */
+        pay_url: string | null;
+    } | null;
+    /**
+     * This month's usage against the plan, the same numbers as GET /v1/usage. The month is the calendar month in UTC, not the billing period.
+     */
+    usage: {
+        period_start: string;
+        resets_at: string;
+        emails: {
+            used: number;
+            limit: number;
+            /**
+             * Prepaid email credits, spent after the monthly allowance
+             */
+            credits: number;
+        };
+        contacts: {
+            used: number;
+            limit: number;
+        };
+        segments: {
+            used: number;
+            limit: number;
+        };
+        broadcasts: {
+            used: number;
+            limit: number;
+        };
+        domains: {
+            used: number;
+            limit: number | null;
+        };
+        /**
+         * Members plus pending invitations, as the seat limit counts them
+         */
+        members: {
+            used: number;
+            limit: number;
+        };
+    };
+    /**
+     * The plan above this one, with its price and limits; null on the top plan
+     */
+    next_tier: {
+        plan: string;
+        name: string;
+        /**
+         * In the smallest currency unit (cents)
+         */
+        price: {
+            monthly: number;
+            yearly: number;
+            currency: string;
+        };
+        /**
+         * What the plan allows
+         */
+        limits: {
+            /**
+             * Emails a month
+             */
+            emails: number;
+            contacts: number;
+            segments: number;
+            /**
+             * Broadcasts a month
+             */
+            broadcasts: number;
+            /**
+             * Sending domains; null means no cap
+             */
+            domains: number | null;
+            /**
+             * People on the team, the owner included
+             */
+            members: number;
+        };
+    } | null;
+};
+
+export type BillingCheckout = {
+    object: 'billing_checkout';
+    /**
+     * checkout: a Stripe Checkout page for a first subscription. confirm: the billing page with the change open in its confirmation dialog, for an existing subscription.
+     */
+    action: 'checkout' | 'confirm';
+    url: string;
+    plan: string;
+    interval: 'monthly' | 'yearly';
+    /**
+     * For confirm. up or same: the prorated difference is charged when the person confirms, and the plan applies once that is paid. down: nothing is charged now and the plan moves at effective_at.
+     */
+    direction: 'up' | 'down' | 'same' | null;
+    /**
+     * When a move down takes effect
+     */
+    effective_at: string | null;
+};
+
+export type BillingPortalSession = {
+    object: 'billing_portal_session';
+    url: string;
+};
+
+export type Invoice = {
+    object: 'invoice';
+    id: string;
+    number: string | null;
+    created_at: string;
+    /**
+     * The invoice total, in the smallest currency unit
+     */
+    amount: number;
+    amount_paid: number;
+    currency: string;
+    status: 'draft' | 'open' | 'paid' | 'uncollectible' | 'void' | null;
+    /**
+     * Stripe's page for the invoice, where an open one can be paid
+     */
+    hosted_invoice_url: string | null;
+    /**
+     * A link to the PDF
+     */
+    invoice_pdf: string | null;
 };
 
 export type TemplateVariableWritable = {
@@ -2785,6 +3057,10 @@ export type GetEmailMetricsData = {
          * Comma-separated broadcast ids, up to 100. Not with email.
          */
         broadcast_id?: string;
+        /**
+         * providers adds a providers array: sent email by the recipient's mailbox provider over the range and the id filters, each email counted once by its first To address, by the time it was created and its current status. Not part of Resend's API.
+         */
+        include?: 'providers';
     };
     url: '/v1/emails/metrics';
 };
@@ -2862,6 +3138,10 @@ export type GetEmailMetricsResponses = {
             broadcast_name?: string | null;
             [key: string]: number | string | null | string | null | string | null | string | null | string | null | string | null | undefined;
         }>;
+        /**
+         * With include=providers: one row per mailbox provider with at least one sent email, most sent first. A recipient domain not classified yet counts as other for that request (up to 50 new domains are looked up per request).
+         */
+        providers?: Array<MailboxProviderMetrics>;
     };
 };
 
@@ -3255,7 +3535,7 @@ export type ReplyToReceivedEmailErrors = {
      */
     409: Error;
     /**
-     * Error
+     * Payload too large - over a size limit
      */
     413: Error;
     /**
@@ -3667,6 +3947,9 @@ export type ListInboxThreadsData = {
     };
     query?: {
         folder?: 'inbox' | 'archive' | 'spam' | 'sent' | 'trash';
+        /**
+         * Search, for example from:ada@example.com is:unread after:2026-09-01 "late fee"
+         */
         query?: string;
         /**
          * Label ids; repeat the parameter or separate with commas
@@ -3702,6 +3985,10 @@ export type ListInboxThreadsErrors = {
      * Resource not found
      */
     404: Error;
+    /**
+     * The request is well formed but cannot be carried out in the current state, for example an unpublished template
+     */
+    422: Error;
     /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
@@ -3843,6 +4130,10 @@ export type UpdateInboxThreadData = {
          * Remove this label. Not in Resend.
          */
         remove_label_id?: string;
+        /**
+         * The email of a team member to assign the thread to, or null to unassign. Not in Resend.
+         */
+        assignee_email?: string | null;
     };
     path: {
         /**
@@ -3876,6 +4167,10 @@ export type UpdateInboxThreadErrors = {
      */
     404: Error;
     /**
+     * The request is well formed but cannot be carried out in the current state, for example an unpublished template
+     */
+    422: Error;
+    /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
     429: Error;
@@ -3895,6 +4190,192 @@ export type UpdateInboxThreadResponses = {
 };
 
 export type UpdateInboxThreadResponse = UpdateInboxThreadResponses[keyof UpdateInboxThreadResponses];
+
+export type ListInboxThreadNotesData = {
+    body?: never;
+    path: {
+        /**
+         * The inbox id or its email address
+         */
+        inbox_id: string;
+        /**
+         * The thread id
+         */
+        thread_id: string;
+    };
+    query?: {
+        limit?: number;
+        /**
+         * The id of the last note on the page; returns the next, newer page
+         */
+        after?: string;
+        /**
+         * The id of the first note on the page; returns the previous, older page. Not with after.
+         */
+        before?: string;
+    };
+    url: '/v1/inboxes/{inbox_id}/threads/{thread_id}/notes';
+};
+
+export type ListInboxThreadNotesErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type ListInboxThreadNotesError = ListInboxThreadNotesErrors[keyof ListInboxThreadNotesErrors];
+
+export type ListInboxThreadNotesResponses = {
+    /**
+     * A page of notes
+     */
+    200: {
+        object?: string;
+        has_more?: boolean;
+        data?: Array<InboxThreadNote>;
+    };
+};
+
+export type ListInboxThreadNotesResponse = ListInboxThreadNotesResponses[keyof ListInboxThreadNotesResponses];
+
+export type CreateInboxThreadNoteData = {
+    body: {
+        text: string;
+    };
+    path: {
+        /**
+         * The inbox id or its email address
+         */
+        inbox_id: string;
+        /**
+         * The thread id
+         */
+        thread_id: string;
+    };
+    query?: never;
+    url: '/v1/inboxes/{inbox_id}/threads/{thread_id}/notes';
+};
+
+export type CreateInboxThreadNoteErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * The request is well formed but cannot be carried out in the current state, for example an unpublished template
+     */
+    422: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type CreateInboxThreadNoteError = CreateInboxThreadNoteErrors[keyof CreateInboxThreadNoteErrors];
+
+export type CreateInboxThreadNoteResponses = {
+    /**
+     * The new note
+     */
+    201: InboxThreadNote;
+};
+
+export type CreateInboxThreadNoteResponse = CreateInboxThreadNoteResponses[keyof CreateInboxThreadNoteResponses];
+
+export type DeleteInboxThreadNoteData = {
+    body?: never;
+    path: {
+        /**
+         * The inbox id or its email address
+         */
+        inbox_id: string;
+        /**
+         * The thread id
+         */
+        thread_id: string;
+        /**
+         * The note id
+         */
+        note_id: string;
+    };
+    query?: never;
+    url: '/v1/inboxes/{inbox_id}/threads/{thread_id}/notes/{note_id}';
+};
+
+export type DeleteInboxThreadNoteErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type DeleteInboxThreadNoteError = DeleteInboxThreadNoteErrors[keyof DeleteInboxThreadNoteErrors];
+
+export type DeleteInboxThreadNoteResponses = {
+    /**
+     * Deleted
+     */
+    200: {
+        object?: string;
+        id?: string;
+        deleted?: boolean;
+    };
+};
+
+export type DeleteInboxThreadNoteResponse = DeleteInboxThreadNoteResponses[keyof DeleteInboxThreadNoteResponses];
 
 export type ListInboxThreadEmailsData = {
     body?: never;
@@ -4029,6 +4510,25 @@ export type ReplyToInboxThreadEmailData = {
         html?: string;
         text?: string;
         subject?: string;
+        /**
+         * Up to 10 files, base64 encoded, 10 MB each and 25 MB in total. A content_id makes the part inline: reference it from the HTML as cid:<content_id>.
+         */
+        attachments?: Array<{
+            filename: string;
+            /**
+             * Base64-encoded file content
+             */
+            content: string;
+            content_type?: string;
+            /**
+             * Letters, digits, . _ - with an optional @domain; sent inline as multipart/related
+             */
+            content_id?: string;
+            /**
+             * Send inline even without a content_id (a Content-ID is derived from the filename)
+             */
+            inline?: boolean;
+        }>;
     };
     headers?: {
         'Idempotency-Key'?: string;
@@ -4073,6 +4573,10 @@ export type ReplyToInboxThreadEmailErrors = {
      */
     409: Error;
     /**
+     * Payload too large - over a size limit
+     */
+    413: Error;
+    /**
      * The request is well formed but cannot be carried out in the current state, for example an unpublished template
      */
     422: Error;
@@ -4105,6 +4609,25 @@ export type ForwardInboxThreadEmailData = {
         html?: string;
         text?: string;
         subject?: string;
+        /**
+         * Up to 10 files, base64 encoded, 10 MB each and 25 MB in total. A content_id makes the part inline: reference it from the HTML as cid:<content_id>.
+         */
+        attachments?: Array<{
+            filename: string;
+            /**
+             * Base64-encoded file content
+             */
+            content: string;
+            content_type?: string;
+            /**
+             * Letters, digits, . _ - with an optional @domain; sent inline as multipart/related
+             */
+            content_id?: string;
+            /**
+             * Send inline even without a content_id (a Content-ID is derived from the filename)
+             */
+            inline?: boolean;
+        }>;
     };
     headers?: {
         'Idempotency-Key'?: string;
@@ -4148,6 +4671,10 @@ export type ForwardInboxThreadEmailErrors = {
      * Conflict - the resource already exists or changed meanwhile
      */
     409: Error;
+    /**
+     * Payload too large - over a size limit
+     */
+    413: Error;
     /**
      * The request is well formed but cannot be carried out in the current state, for example an unpublished template
      */
@@ -4525,6 +5052,22 @@ export type CreateInboxDraftData = {
         html?: string | null;
         text?: string | null;
         /**
+         * The draft's files; sending the field replaces every file it has, null or [] removes them all. Up to 10 files, 10 MB each and 25 MB in total. Drafts take no path or content_id.
+         */
+        attachments?: Array<{
+            filename: string;
+            /**
+             * Base64-encoded file content
+             */
+            content: string;
+            content_type?: string;
+        } | {
+            /**
+             * Keep this file of the draft as it is. Not in Resend.
+             */
+            id: string;
+        }> | null;
+        /**
          * The thread to reply in. Send with reply_to_email_id.
          */
         thread_id?: string;
@@ -4560,6 +5103,14 @@ export type CreateInboxDraftErrors = {
      * Resource not found
      */
     404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Payload too large - over a size limit
+     */
+    413: Error;
     /**
      * The request is well formed but cannot be carried out in the current state, for example an unpublished template
      */
@@ -4618,6 +5169,10 @@ export type DeleteInboxDraftErrors = {
      * Resource not found
      */
     404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
     /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
@@ -4702,6 +5257,22 @@ export type UpdateInboxDraftData = {
         html?: string | null;
         text?: string | null;
         /**
+         * The draft's files; sending the field replaces every file it has, null or [] removes them all. Up to 10 files, 10 MB each and 25 MB in total. Drafts take no path or content_id.
+         */
+        attachments?: Array<{
+            filename: string;
+            /**
+             * Base64-encoded file content
+             */
+            content: string;
+            content_type?: string;
+        } | {
+            /**
+             * Keep this file of the draft as it is. Not in Resend.
+             */
+            id: string;
+        }> | null;
+        /**
          * Only write if the draft is still at this revision. Not in Resend.
          */
         revision?: number;
@@ -4742,6 +5313,10 @@ export type UpdateInboxDraftErrors = {
      */
     409: Error;
     /**
+     * Payload too large - over a size limit
+     */
+    413: Error;
+    /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
     429: Error;
@@ -4761,6 +5336,64 @@ export type UpdateInboxDraftResponses = {
 };
 
 export type UpdateInboxDraftResponse = UpdateInboxDraftResponses[keyof UpdateInboxDraftResponses];
+
+export type GetInboxDraftAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * The inbox id or its email address
+         */
+        inbox_id: string;
+        /**
+         * The draft id
+         */
+        draft_id: string;
+        /**
+         * The attachment id, from the draft's attachments
+         */
+        attachment_id: string;
+    };
+    query?: never;
+    url: '/v1/inboxes/{inbox_id}/drafts/{draft_id}/attachments/{attachment_id}';
+};
+
+export type GetInboxDraftAttachmentErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Gone - the resource no longer holds what was asked for
+     */
+    410: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type GetInboxDraftAttachmentError = GetInboxDraftAttachmentErrors[keyof GetInboxDraftAttachmentErrors];
+
+export type GetInboxDraftAttachmentResponses = {
+    /**
+     * The file with a download link
+     */
+    200: InboxDraftAttachmentDownload;
+};
+
+export type GetInboxDraftAttachmentResponse = GetInboxDraftAttachmentResponses[keyof GetInboxDraftAttachmentResponses];
 
 export type SendInboxDraftData = {
     body?: {
@@ -5666,6 +6299,9 @@ export type GetCapabilitiesResponses = {
         team_id: string | null;
         team_sending_status: string | null;
         account: {
+            /**
+             * The plan: free, starter, growth or scale.
+             */
             tier?: string;
             status?: string;
         };
@@ -5721,6 +6357,230 @@ export type GetUsageResponses = {
 };
 
 export type GetUsageResponse = GetUsageResponses[keyof GetUsageResponses];
+
+export type GetAccountActivationData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/account/activation';
+};
+
+export type GetAccountActivationErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type GetAccountActivationError = GetAccountActivationErrors[keyof GetAccountActivationErrors];
+
+export type GetAccountActivationResponses = {
+    /**
+     * The account's activation state
+     */
+    200: {
+        status: 'pending' | 'active' | 'rejected';
+        plan: string;
+        email_verified: boolean;
+        /**
+         * Set once a free-trial request is waiting for review
+         */
+        free_trial_requested_at: string | null;
+        /**
+         * Why a request was turned down, when it was
+         */
+        rejection_reason: string | null;
+    };
+};
+
+export type GetAccountActivationResponse = GetAccountActivationResponses[keyof GetAccountActivationResponses];
+
+export type RequestFreeTrialData = {
+    body: {
+        use_case: string;
+        /**
+         * How you heard about SMTPfast: one of the options on the activation page, or other
+         */
+        source?: string;
+        source_other?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/account/activation/free-trial';
+};
+
+export type RequestFreeTrialErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * The body is larger than 16 KB
+     */
+    413: unknown;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type RequestFreeTrialError = RequestFreeTrialErrors[keyof RequestFreeTrialErrors];
+
+export type RequestFreeTrialResponses = {
+    /**
+     * Request received
+     */
+    200: {
+        requested: boolean;
+        message: string;
+    };
+};
+
+export type RequestFreeTrialResponse = RequestFreeTrialResponses[keyof RequestFreeTrialResponses];
+
+export type RedeemActivationInviteData = {
+    body: {
+        code: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/account/activation/invite';
+};
+
+export type RedeemActivationInviteErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type RedeemActivationInviteError = RedeemActivationInviteErrors[keyof RedeemActivationInviteErrors];
+
+export type RedeemActivationInviteResponses = {
+    /**
+     * The account is active
+     */
+    200: {
+        status: 'active';
+        plan: 'free';
+    };
+};
+
+export type RedeemActivationInviteResponse = RedeemActivationInviteResponses[keyof RedeemActivationInviteResponses];
+
+export type CreateActivationCheckoutData = {
+    body: {
+        plan: 'starter' | 'growth' | 'scale';
+        interval?: 'monthly' | 'yearly';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/account/activation/checkout';
+};
+
+export type CreateActivationCheckoutErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Stripe could not be reached - retry shortly
+     */
+    503: Error;
+};
+
+export type CreateActivationCheckoutError = CreateActivationCheckoutErrors[keyof CreateActivationCheckoutErrors];
+
+export type CreateActivationCheckoutResponses = {
+    /**
+     * The link to open
+     */
+    200: {
+        url: string;
+    };
+};
+
+export type CreateActivationCheckoutResponse = CreateActivationCheckoutResponses[keyof CreateActivationCheckoutResponses];
 
 export type ListTeamMembersData = {
     body?: never;
@@ -6052,6 +6912,229 @@ export type GetTeamInviteResponses = {
 };
 
 export type GetTeamInviteResponse = GetTeamInviteResponses[keyof GetTeamInviteResponses];
+
+export type GetBillingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/billing';
+};
+
+export type GetBillingErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Stripe could not be reached - retry shortly
+     */
+    503: Error;
+};
+
+export type GetBillingError = GetBillingErrors[keyof GetBillingErrors];
+
+export type GetBillingResponses = {
+    /**
+     * Plan and usage
+     */
+    200: Billing;
+};
+
+export type GetBillingResponse = GetBillingResponses[keyof GetBillingResponses];
+
+export type CreateBillingCheckoutData = {
+    body: {
+        /**
+         * The plan to move to
+         */
+        plan: 'starter' | 'growth' | 'scale';
+        /**
+         * Defaults to the subscription's current interval, or monthly without one. Required when the subscription is on a price with no known interval.
+         */
+        interval?: 'monthly' | 'yearly';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/billing/checkout';
+};
+
+export type CreateBillingCheckoutErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Stripe could not be reached - retry shortly
+     */
+    503: Error;
+};
+
+export type CreateBillingCheckoutError = CreateBillingCheckoutErrors[keyof CreateBillingCheckoutErrors];
+
+export type CreateBillingCheckoutResponses = {
+    /**
+     * The link
+     */
+    200: BillingCheckout;
+};
+
+export type CreateBillingCheckoutResponse = CreateBillingCheckoutResponses[keyof CreateBillingCheckoutResponses];
+
+export type CreateBillingPortalSessionData = {
+    body?: {
+        /**
+         * Open the portal on the page that cancels the subscription
+         */
+        flow?: 'cancel';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/billing/portal';
+};
+
+export type CreateBillingPortalSessionErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Stripe could not be reached - retry shortly
+     */
+    503: Error;
+};
+
+export type CreateBillingPortalSessionError = CreateBillingPortalSessionErrors[keyof CreateBillingPortalSessionErrors];
+
+export type CreateBillingPortalSessionResponses = {
+    /**
+     * The link
+     */
+    200: BillingPortalSession;
+};
+
+export type CreateBillingPortalSessionResponse = CreateBillingPortalSessionResponses[keyof CreateBillingPortalSessionResponses];
+
+export type ListBillingInvoicesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * How many to return, 1 to 100 (default 10)
+         */
+        limit?: number;
+        /**
+         * Return invoices older than this invoice id
+         */
+        after?: string;
+        /**
+         * Return invoices newer than this invoice id
+         */
+        before?: string;
+    };
+    url: '/v1/billing/invoices';
+};
+
+export type ListBillingInvoicesErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Stripe could not be reached - retry shortly
+     */
+    503: Error;
+};
+
+export type ListBillingInvoicesError = ListBillingInvoicesErrors[keyof ListBillingInvoicesErrors];
+
+export type ListBillingInvoicesResponses = {
+    /**
+     * Invoices
+     */
+    200: {
+        object: 'list';
+        has_more: boolean;
+        data: Array<Invoice>;
+    };
+};
+
+export type ListBillingInvoicesResponse = ListBillingInvoicesResponses[keyof ListBillingInvoicesResponses];
 
 export type ListContactSegmentsData = {
     body?: never;
@@ -7763,7 +8846,7 @@ export type UpdateDomainReceivingErrors = {
      */
     500: Error;
     /**
-     * Error
+     * Stripe could not be reached - retry shortly
      */
     503: Error;
 };
@@ -7884,7 +8967,7 @@ export type ClaimDomainErrors = {
      */
     500: Error;
     /**
-     * Error
+     * Stripe could not be reached - retry shortly
      */
     503: Error;
 };
@@ -8147,6 +9230,301 @@ export type UpdateApiKeyResponses = {
 };
 
 export type UpdateApiKeyResponse = UpdateApiKeyResponses[keyof UpdateApiKeyResponses];
+
+export type CreateCliDeviceCodeData = {
+    body?: {
+        /**
+         * Shown on the approval page. Default: SMTPfast CLI
+         */
+        client_name?: string;
+        /**
+         * The machine's name; the key is called "CLI on <hostname> (<date>)"
+         */
+        hostname?: string;
+        /**
+         * Scopes for the key. Default: the default API key scopes. The approver's role caps them: billing scopes are granted only for a team the approver owns.
+         */
+        scopes?: Array<string>;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/cli/device';
+};
+
+export type CreateCliDeviceCodeErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type CreateCliDeviceCodeError = CreateCliDeviceCodeErrors[keyof CreateCliDeviceCodeErrors];
+
+export type CreateCliDeviceCodeResponses = {
+    /**
+     * Codes for the person and for polling
+     */
+    200: {
+        /**
+         * Secret. Send it to POST /v1/cli/token; never show it.
+         */
+        device_code: string;
+        /**
+         * For the person to check or type on the approval page
+         */
+        user_code: string;
+        verification_uri: string;
+        verification_uri_complete: string;
+        /**
+         * Seconds until both codes expire
+         */
+        expires_in: number;
+        /**
+         * Seconds to wait between polls
+         */
+        interval: number;
+    };
+};
+
+export type CreateCliDeviceCodeResponse = CreateCliDeviceCodeResponses[keyof CreateCliDeviceCodeResponses];
+
+export type ExchangeCliDeviceCodeData = {
+    body: {
+        device_code: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/cli/token';
+};
+
+export type ExchangeCliDeviceCodeErrors = {
+    /**
+     * Not approved yet, polled too soon, expired, denied or unknown
+     */
+    400: {
+        /**
+         * authorization_pending: nobody has decided yet, poll again after interval seconds. slow_down: polled too soon, wait the new interval. expired_token: start again. access_denied: the person denied it, or can no longer create the key. invalid_grant: unknown code, or one already used (the key it issued is then revoked).
+         */
+        error: 'authorization_pending' | 'slow_down' | 'expired_token' | 'access_denied' | 'invalid_grant';
+        error_description: string;
+        /**
+         * With slow_down: the seconds to wait between polls from now on
+         */
+        interval?: number;
+    };
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type ExchangeCliDeviceCodeError = ExchangeCliDeviceCodeErrors[keyof ExchangeCliDeviceCodeErrors];
+
+export type ExchangeCliDeviceCodeResponses = {
+    /**
+     * The new API key. The key value is returned only here.
+     */
+    200: {
+        id: string;
+        name: string;
+        /**
+         * The full key. Store it; it cannot be read again.
+         */
+        key: string;
+        prefix: string;
+        scopes: Array<string>;
+        created_at: string;
+        team: {
+            id: string;
+            name: string;
+        };
+    };
+};
+
+export type ExchangeCliDeviceCodeResponse = ExchangeCliDeviceCodeResponses[keyof ExchangeCliDeviceCodeResponses];
+
+export type StartCliSignupData = {
+    body: {
+        email: string;
+        name?: string;
+        /**
+         * The monthly product update email, as the checkbox on the signup form
+         */
+        newsletter?: boolean;
+        client_name?: string;
+        /**
+         * The machine's name; the first API key is called "CLI on <hostname> (<date>)"
+         */
+        hostname?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/cli/signup';
+};
+
+export type StartCliSignupErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Signing up from the CLI is not available right now
+     */
+    503: unknown;
+};
+
+export type StartCliSignupError = StartCliSignupErrors[keyof StartCliSignupErrors];
+
+export type StartCliSignupResponses = {
+    /**
+     * A code is on its way, or a note that the address already has an account
+     */
+    200: {
+        /**
+         * Send it back with the code to POST /v1/cli/signup/verify
+         */
+        signup_id: string;
+        email: string;
+        expires_in: number;
+        code_length: number;
+    };
+};
+
+export type StartCliSignupResponse = StartCliSignupResponses[keyof StartCliSignupResponses];
+
+export type VerifyCliSignupData = {
+    body: {
+        signup_id: string;
+        /**
+         * The 8 digits from the email, with or without the dash
+         */
+        code: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/cli/signup/verify';
+};
+
+export type VerifyCliSignupErrors = {
+    /**
+     * Wrong, expired or used code
+     */
+    400: {
+        /**
+         * invalid_code: wrong code, try again (attempts_remaining says how often). expired_code: the signup expired, ran out of tries or was used; start again. account_exists: the address has an account; use smtpfast login. signup_refused: the address cannot sign up. too_many_attempts: wait for Retry-After. unavailable: try later.
+         */
+        error: 'invalid_code' | 'expired_code' | 'account_exists' | 'signup_refused' | 'too_many_attempts' | 'unavailable';
+        error_description: string;
+        attempts_remaining?: number;
+    };
+    /**
+     * The address cannot sign up
+     */
+    403: {
+        /**
+         * invalid_code: wrong code, try again (attempts_remaining says how often). expired_code: the signup expired, ran out of tries or was used; start again. account_exists: the address has an account; use smtpfast login. signup_refused: the address cannot sign up. too_many_attempts: wait for Retry-After. unavailable: try later.
+         */
+        error: 'invalid_code' | 'expired_code' | 'account_exists' | 'signup_refused' | 'too_many_attempts' | 'unavailable';
+        error_description: string;
+        attempts_remaining?: number;
+    };
+    /**
+     * The address already has an account
+     */
+    409: {
+        /**
+         * invalid_code: wrong code, try again (attempts_remaining says how often). expired_code: the signup expired, ran out of tries or was used; start again. account_exists: the address has an account; use smtpfast login. signup_refused: the address cannot sign up. too_many_attempts: wait for Retry-After. unavailable: try later.
+         */
+        error: 'invalid_code' | 'expired_code' | 'account_exists' | 'signup_refused' | 'too_many_attempts' | 'unavailable';
+        error_description: string;
+        attempts_remaining?: number;
+    };
+    /**
+     * Too many attempts; see Retry-After
+     */
+    429: {
+        /**
+         * invalid_code: wrong code, try again (attempts_remaining says how often). expired_code: the signup expired, ran out of tries or was used; start again. account_exists: the address has an account; use smtpfast login. signup_refused: the address cannot sign up. too_many_attempts: wait for Retry-After. unavailable: try later.
+         */
+        error: 'invalid_code' | 'expired_code' | 'account_exists' | 'signup_refused' | 'too_many_attempts' | 'unavailable';
+        error_description: string;
+        attempts_remaining?: number;
+    };
+    /**
+     * Internal server error
+     */
+    500: Error;
+    /**
+     * Signing up from the CLI is paused or not available
+     */
+    503: {
+        /**
+         * invalid_code: wrong code, try again (attempts_remaining says how often). expired_code: the signup expired, ran out of tries or was used; start again. account_exists: the address has an account; use smtpfast login. signup_refused: the address cannot sign up. too_many_attempts: wait for Retry-After. unavailable: try later.
+         */
+        error: 'invalid_code' | 'expired_code' | 'account_exists' | 'signup_refused' | 'too_many_attempts' | 'unavailable';
+        error_description: string;
+        attempts_remaining?: number;
+    };
+};
+
+export type VerifyCliSignupError = VerifyCliSignupErrors[keyof VerifyCliSignupErrors];
+
+export type VerifyCliSignupResponses = {
+    /**
+     * The account and its first API key. The key value is returned only here.
+     */
+    200: {
+        id: string;
+        name: string;
+        /**
+         * The full key. Store it; it cannot be read again.
+         */
+        key: string;
+        prefix: string;
+        scopes: Array<string>;
+        created_at: string;
+        team: {
+            id: string;
+            name: string;
+        };
+        account: {
+            id: string;
+            email: string;
+            status: 'pending';
+            plan: 'free';
+        };
+        activation: {
+            required: boolean;
+            docs: string;
+        };
+    };
+};
+
+export type VerifyCliSignupResponse = VerifyCliSignupResponses[keyof VerifyCliSignupResponses];
 
 export type ListWebhooksData = {
     body?: never;
@@ -9133,7 +10511,7 @@ export type CreateLinkDomainErrors = {
      */
     502: LinkDomainError;
     /**
-     * Error
+     * Stripe could not be reached - retry shortly
      */
     503: LinkDomainError;
 };
@@ -9375,7 +10753,7 @@ export type RefreshLinkDomainErrors = {
      */
     502: LinkDomainError;
     /**
-     * Error
+     * Stripe could not be reached - retry shortly
      */
     503: LinkDomainError;
 };
