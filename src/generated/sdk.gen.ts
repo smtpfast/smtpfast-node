@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { AddContactToSegmentData, AddContactToSegmentErrors, AddContactToSegmentResponses, AddDomainData, AddDomainErrors, AddDomainResponses, AddSuppressionsBatchData, AddSuppressionsBatchErrors, AddSuppressionsBatchResponses, ApproveAllPendingSignupsData, ApproveAllPendingSignupsErrors, ApproveAllPendingSignupsResponses, ApprovePendingSignupData, ApprovePendingSignupErrors, ApprovePendingSignupResponses, ArchiveBroadcastData, ArchiveBroadcastErrors, ArchiveBroadcastResponses, CancelBroadcastData, CancelBroadcastErrors, CancelBroadcastResponses, CancelEmailData, CancelEmailErrors, CancelEmailResponses, ClaimDomainData, ClaimDomainErrors, ClaimDomainResponses, CreateApiKeyData, CreateApiKeyErrors, CreateApiKeyResponses, CreateBroadcastData, CreateBroadcastErrors, CreateBroadcastResponses, CreateContactData, CreateContactErrors, CreateContactPropertyData, CreateContactPropertyErrors, CreateContactPropertyResponses, CreateContactResponses, CreateInboxData, CreateInboxDraftData, CreateInboxDraftErrors, CreateInboxDraftResponses, CreateInboxErrors, CreateInboxLabelData, CreateInboxLabelErrors, CreateInboxLabelResponses, CreateInboxResponses, CreateLinkDomainData, CreateLinkDomainErrors, CreateLinkDomainResponses, CreateSegmentData, CreateSegmentErrors, CreateSegmentResponses, CreateSignupFormData, CreateSignupFormErrors, CreateSignupFormResponses, CreateSuppressionData, CreateSuppressionErrors, CreateSuppressionResponses, CreateTeamInviteData, CreateTeamInviteErrors, CreateTeamInviteResponses, CreateTemplateData, CreateTemplateErrors, CreateTemplateResponses, CreateWebhookData, CreateWebhookErrors, CreateWebhookResponses, DeleteBroadcastData, DeleteBroadcastErrors, DeleteBroadcastResponses, DeleteContactData, DeleteContactErrors, DeleteContactPropertyData, DeleteContactPropertyErrors, DeleteContactPropertyResponses, DeleteContactResponses, DeleteContactsData, DeleteContactsErrors, DeleteContactsResponses, DeleteDomainData, DeleteDomainErrors, DeleteDomainResponses, DeleteInboxData, DeleteInboxDraftData, DeleteInboxDraftErrors, DeleteInboxDraftResponses, DeleteInboxErrors, DeleteInboxLabelData, DeleteInboxLabelErrors, DeleteInboxLabelResponses, DeleteInboxResponses, DeleteInboxThreadData, DeleteInboxThreadErrors, DeleteInboxThreadResponses, DeleteLinkDomainData, DeleteLinkDomainErrors, DeleteLinkDomainResponses, DeleteReceivedEmailData, DeleteReceivedEmailErrors, DeleteReceivedEmailResponses, DeleteSegmentData, DeleteSegmentErrors, DeleteSegmentResponses, DeleteSignupFormData, DeleteSignupFormErrors, DeleteSignupFormResponses, DeleteSuppressionData, DeleteSuppressionErrors, DeleteSuppressionResponses, DeleteTemplateData, DeleteTemplateErrors, DeleteTemplateResponses, DeleteWebhookData, DeleteWebhookErrors, DeleteWebhookResponses, DuplicateBroadcastData, DuplicateBroadcastErrors, DuplicateBroadcastResponses, DuplicateTemplateData, DuplicateTemplateErrors, DuplicateTemplateResponses, ExportContactsData, ExportContactsErrors, ExportContactsResponses, ForwardInboxThreadEmailData, ForwardInboxThreadEmailErrors, ForwardInboxThreadEmailResponses, GetAnalyticsData, GetAnalyticsErrors, GetAnalyticsResponses, GetBroadcastAudienceData, GetBroadcastAudienceErrors, GetBroadcastAudienceResponses, GetBroadcastData, GetBroadcastErrors, GetBroadcastResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetContactData, GetContactErrors, GetContactPropertyData, GetContactPropertyErrors, GetContactPropertyResponses, GetContactResponses, GetDomainClaimRecordData, GetDomainClaimRecordErrors, GetDomainClaimRecordResponses, GetDomainData, GetDomainErrors, GetDomainResponses, GetEmailData, GetEmailErrors, GetEmailMetricsData, GetEmailMetricsErrors, GetEmailMetricsResponses, GetEmailResponses, GetInboxData, GetInboxDraftData, GetInboxDraftErrors, GetInboxDraftResponses, GetInboxErrors, GetInboxLabelData, GetInboxLabelErrors, GetInboxLabelResponses, GetInboxResponses, GetInboxThreadData, GetInboxThreadEmailData, GetInboxThreadEmailErrors, GetInboxThreadEmailResponses, GetInboxThreadErrors, GetInboxThreadResponses, GetLinkDomainData, GetLinkDomainDomainConnectData, GetLinkDomainDomainConnectErrors, GetLinkDomainDomainConnectResponses, GetLinkDomainErrors, GetLinkDomainResponses, GetReceivedEmailAttachmentData, GetReceivedEmailAttachmentErrors, GetReceivedEmailAttachmentResponses, GetReceivedEmailData, GetReceivedEmailErrors, GetReceivedEmailResponses, GetSegmentData, GetSegmentErrors, GetSegmentResponses, GetSignupFormData, GetSignupFormErrors, GetSignupFormResponses, GetSuppressionData, GetSuppressionErrors, GetSuppressionResponses, GetTeamInviteData, GetTeamInviteErrors, GetTeamInviteResponses, GetTemplateData, GetTemplateErrors, GetTemplateResponses, GetUsageData, GetUsageErrors, GetUsageResponses, GetWebhookData, GetWebhookDeliveryData, GetWebhookDeliveryErrors, GetWebhookDeliveryResponses, GetWebhookErrors, GetWebhookEventData, GetWebhookEventErrors, GetWebhookEventResponses, GetWebhookResponses, ListApiKeysData, ListApiKeysErrors, ListApiKeysResponses, ListBroadcastClickedLinksData, ListBroadcastClickedLinksErrors, ListBroadcastClickedLinksResponses, ListBroadcastRecipientsData, ListBroadcastRecipientsErrors, ListBroadcastRecipientsResponses, ListBroadcastsData, ListBroadcastsErrors, ListBroadcastsResponses, ListClickedLinksData, ListClickedLinksErrors, ListClickedLinksResponses, ListContactPropertiesData, ListContactPropertiesResponses, ListContactsData, ListContactSegmentsData, ListContactSegmentsErrors, ListContactSegmentsResponses, ListContactsErrors, ListContactsResponses, ListDomainsData, ListDomainsErrors, ListDomainsResponses, ListEmailsData, ListEmailsErrors, ListEmailsResponses, ListInboxDraftsData, ListInboxDraftsErrors, ListInboxDraftsResponses, ListInboxesData, ListInboxesErrors, ListInboxesResponses, ListInboxLabelsData, ListInboxLabelsErrors, ListInboxLabelsResponses, ListInboxThreadEmailsData, ListInboxThreadEmailsErrors, ListInboxThreadEmailsResponses, ListInboxThreadsData, ListInboxThreadsErrors, ListInboxThreadsResponses, ListLinkDomainsData, ListLinkDomainsErrors, ListLinkDomainsResponses, ListLogsData, ListLogsErrors, ListLogsResponses, ListPendingSignupsData, ListPendingSignupsErrors, ListPendingSignupsResponses, ListReceivedEmailAttachmentsData, ListReceivedEmailAttachmentsErrors, ListReceivedEmailAttachmentsResponses, ListReceivedEmailsData, ListReceivedEmailsErrors, ListReceivedEmailsResponses, ListSegmentContactsData, ListSegmentContactsErrors, ListSegmentContactsResponses, ListSegmentsData, ListSegmentsErrors, ListSegmentsResponses, ListSignupFormsData, ListSignupFormsErrors, ListSignupFormsResponses, ListSuppressionsData, ListSuppressionsErrors, ListSuppressionsResponses, ListTeamInvitesData, ListTeamInvitesErrors, ListTeamInvitesResponses, ListTeamMembersData, ListTeamMembersErrors, ListTeamMembersResponses, ListTemplatesData, ListTemplatesErrors, ListTemplatesResponses, ListWebhookDeliveriesData, ListWebhookDeliveriesErrors, ListWebhookDeliveriesResponses, ListWebhookEventAttemptsData, ListWebhookEventAttemptsErrors, ListWebhookEventAttemptsResponses, ListWebhookEventsData, ListWebhookEventsErrors, ListWebhookEventsResponses, ListWebhooksData, ListWebhooksErrors, ListWebhooksResponses, MarkReceivedEmailsData, MarkReceivedEmailsErrors, MarkReceivedEmailsResponses, PatchWebhookData, PatchWebhookErrors, PatchWebhookResponses, PreviewFormWelcomeEmailData, PreviewFormWelcomeEmailErrors, PreviewFormWelcomeEmailResponses, PublishTemplateData, PublishTemplateErrors, PublishTemplateResponses, RefreshLinkDomainData, RefreshLinkDomainErrors, RefreshLinkDomainResponses, RemoveContactFromSegmentData, RemoveContactFromSegmentErrors, RemoveContactFromSegmentResponses, RemovePendingSignupData, RemovePendingSignupErrors, RemovePendingSignupResponses, RemoveSuppressionsBatchData, RemoveSuppressionsBatchErrors, RemoveSuppressionsBatchResponses, RemoveTeamMemberData, RemoveTeamMemberErrors, RemoveTeamMemberResponses, ReplayWebhookEventData, ReplayWebhookEventErrors, ReplayWebhookEventResponses, ReplyToInboxThreadEmailData, ReplyToInboxThreadEmailErrors, ReplyToInboxThreadEmailResponses, ReplyToReceivedEmailData, ReplyToReceivedEmailErrors, ReplyToReceivedEmailResponses, RetryWebhookDeliveryData, RetryWebhookDeliveryErrors, RetryWebhookDeliveryResponses, RevokeApiKeyData, RevokeApiKeyErrors, RevokeApiKeyResponses, RevokeTeamInviteData, RevokeTeamInviteErrors, RevokeTeamInviteResponses, RotateWebhookSigningSecretData, RotateWebhookSigningSecretErrors, RotateWebhookSigningSecretResponses, SendBroadcastData, SendBroadcastErrors, SendBroadcastResponses, SendBroadcastTestData, SendBroadcastTestErrors, SendBroadcastTestResponses, SendEmailBatchData, SendEmailBatchErrors, SendEmailBatchResponses, SendEmailData, SendEmailErrors, SendEmailResponses, SendInboxDraftData, SendInboxDraftErrors, SendInboxDraftResponses, ShareEmailData, ShareEmailErrors, ShareEmailResponses, StartCloudflareDomainConnectData, StartCloudflareDomainConnectErrors, StartCloudflareDomainConnectResponses, StartCloudflareInboundDomainConnectData, StartCloudflareInboundDomainConnectErrors, StartCloudflareInboundDomainConnectResponses, StartLinkDomainDomainConnectData, StartLinkDomainDomainConnectErrors, StartLinkDomainDomainConnectResponses, TestWebhookData, TestWebhookErrors, TestWebhookResponses, UnarchiveBroadcastData, UnarchiveBroadcastErrors, UnarchiveBroadcastResponses, UpdateApiKeyData, UpdateApiKeyErrors, UpdateApiKeyResponses, UpdateBroadcastData, UpdateBroadcastErrors, UpdateBroadcastResponses, UpdateContactData, UpdateContactErrors, UpdateContactPropertyData, UpdateContactPropertyErrors, UpdateContactPropertyResponses, UpdateContactResponses, UpdateDomainReceivingData, UpdateDomainReceivingErrors, UpdateDomainReceivingResponses, UpdateEmailData, UpdateEmailErrors, UpdateEmailResponses, UpdateInboxData, UpdateInboxDraftData, UpdateInboxDraftErrors, UpdateInboxDraftResponses, UpdateInboxErrors, UpdateInboxLabelData, UpdateInboxLabelErrors, UpdateInboxLabelResponses, UpdateInboxResponses, UpdateInboxThreadData, UpdateInboxThreadErrors, UpdateInboxThreadResponses, UpdateReceivedEmailData, UpdateReceivedEmailErrors, UpdateReceivedEmailResponses, UpdateSegmentData, UpdateSegmentErrors, UpdateSegmentResponses, UpdateSignupFormData, UpdateSignupFormErrors, UpdateSignupFormResponses, UpdateTeamMemberData, UpdateTeamMemberErrors, UpdateTeamMemberResponses, UpdateTemplateData, UpdateTemplateErrors, UpdateTemplateResponses, UpdateWebhookData, UpdateWebhookErrors, UpdateWebhookResponses, VerifyDomainData, VerifyDomainErrors, VerifyDomainResponses } from './types.gen.js';
+import type { AddContactToSegmentData, AddContactToSegmentErrors, AddContactToSegmentResponses, AddDomainData, AddDomainErrors, AddDomainResponses, AddSuppressionsBatchData, AddSuppressionsBatchErrors, AddSuppressionsBatchResponses, ApproveAllPendingSignupsData, ApproveAllPendingSignupsErrors, ApproveAllPendingSignupsResponses, ApprovePendingSignupData, ApprovePendingSignupErrors, ApprovePendingSignupResponses, ArchiveBroadcastData, ArchiveBroadcastErrors, ArchiveBroadcastResponses, CancelBroadcastData, CancelBroadcastErrors, CancelBroadcastResponses, CancelEmailData, CancelEmailErrors, CancelEmailResponses, ClaimDomainData, ClaimDomainErrors, ClaimDomainResponses, CreateActivationCheckoutData, CreateActivationCheckoutErrors, CreateActivationCheckoutResponses, CreateApiKeyData, CreateApiKeyErrors, CreateApiKeyResponses, CreateBillingCheckoutData, CreateBillingCheckoutErrors, CreateBillingCheckoutResponses, CreateBillingPortalSessionData, CreateBillingPortalSessionErrors, CreateBillingPortalSessionResponses, CreateBroadcastData, CreateBroadcastErrors, CreateBroadcastResponses, CreateCliDeviceCodeData, CreateCliDeviceCodeErrors, CreateCliDeviceCodeResponses, CreateContactData, CreateContactErrors, CreateContactPropertyData, CreateContactPropertyErrors, CreateContactPropertyResponses, CreateContactResponses, CreateInboxData, CreateInboxDraftData, CreateInboxDraftErrors, CreateInboxDraftResponses, CreateInboxErrors, CreateInboxLabelData, CreateInboxLabelErrors, CreateInboxLabelResponses, CreateInboxResponses, CreateInboxThreadNoteData, CreateInboxThreadNoteErrors, CreateInboxThreadNoteResponses, CreateLinkDomainData, CreateLinkDomainErrors, CreateLinkDomainResponses, CreateSegmentData, CreateSegmentErrors, CreateSegmentResponses, CreateSignupFormData, CreateSignupFormErrors, CreateSignupFormResponses, CreateSuppressionData, CreateSuppressionErrors, CreateSuppressionResponses, CreateTeamInviteData, CreateTeamInviteErrors, CreateTeamInviteResponses, CreateTemplateData, CreateTemplateErrors, CreateTemplateResponses, CreateWebhookData, CreateWebhookErrors, CreateWebhookResponses, DeleteBroadcastData, DeleteBroadcastErrors, DeleteBroadcastResponses, DeleteContactData, DeleteContactErrors, DeleteContactPropertyData, DeleteContactPropertyErrors, DeleteContactPropertyResponses, DeleteContactResponses, DeleteContactsData, DeleteContactsErrors, DeleteContactsResponses, DeleteDomainData, DeleteDomainErrors, DeleteDomainResponses, DeleteInboxData, DeleteInboxDraftData, DeleteInboxDraftErrors, DeleteInboxDraftResponses, DeleteInboxErrors, DeleteInboxLabelData, DeleteInboxLabelErrors, DeleteInboxLabelResponses, DeleteInboxResponses, DeleteInboxThreadData, DeleteInboxThreadErrors, DeleteInboxThreadNoteData, DeleteInboxThreadNoteErrors, DeleteInboxThreadNoteResponses, DeleteInboxThreadResponses, DeleteLinkDomainData, DeleteLinkDomainErrors, DeleteLinkDomainResponses, DeleteReceivedEmailData, DeleteReceivedEmailErrors, DeleteReceivedEmailResponses, DeleteSegmentData, DeleteSegmentErrors, DeleteSegmentResponses, DeleteSignupFormData, DeleteSignupFormErrors, DeleteSignupFormResponses, DeleteSuppressionData, DeleteSuppressionErrors, DeleteSuppressionResponses, DeleteTemplateData, DeleteTemplateErrors, DeleteTemplateResponses, DeleteWebhookData, DeleteWebhookErrors, DeleteWebhookResponses, DuplicateBroadcastData, DuplicateBroadcastErrors, DuplicateBroadcastResponses, DuplicateTemplateData, DuplicateTemplateErrors, DuplicateTemplateResponses, ExchangeCliDeviceCodeData, ExchangeCliDeviceCodeErrors, ExchangeCliDeviceCodeResponses, ExportContactsData, ExportContactsErrors, ExportContactsResponses, ForwardInboxThreadEmailData, ForwardInboxThreadEmailErrors, ForwardInboxThreadEmailResponses, GetAccountActivationData, GetAccountActivationErrors, GetAccountActivationResponses, GetAnalyticsData, GetAnalyticsErrors, GetAnalyticsResponses, GetBillingData, GetBillingErrors, GetBillingResponses, GetBroadcastAudienceData, GetBroadcastAudienceErrors, GetBroadcastAudienceResponses, GetBroadcastData, GetBroadcastErrors, GetBroadcastResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetContactData, GetContactErrors, GetContactPropertyData, GetContactPropertyErrors, GetContactPropertyResponses, GetContactResponses, GetDomainClaimRecordData, GetDomainClaimRecordErrors, GetDomainClaimRecordResponses, GetDomainData, GetDomainErrors, GetDomainResponses, GetEmailData, GetEmailErrors, GetEmailMetricsData, GetEmailMetricsErrors, GetEmailMetricsResponses, GetEmailResponses, GetInboxData, GetInboxDraftAttachmentData, GetInboxDraftAttachmentErrors, GetInboxDraftAttachmentResponses, GetInboxDraftData, GetInboxDraftErrors, GetInboxDraftResponses, GetInboxErrors, GetInboxLabelData, GetInboxLabelErrors, GetInboxLabelResponses, GetInboxResponses, GetInboxThreadData, GetInboxThreadEmailData, GetInboxThreadEmailErrors, GetInboxThreadEmailResponses, GetInboxThreadErrors, GetInboxThreadResponses, GetLinkDomainData, GetLinkDomainDomainConnectData, GetLinkDomainDomainConnectErrors, GetLinkDomainDomainConnectResponses, GetLinkDomainErrors, GetLinkDomainResponses, GetReceivedEmailAttachmentData, GetReceivedEmailAttachmentErrors, GetReceivedEmailAttachmentResponses, GetReceivedEmailData, GetReceivedEmailErrors, GetReceivedEmailResponses, GetSegmentData, GetSegmentErrors, GetSegmentResponses, GetSignupFormData, GetSignupFormErrors, GetSignupFormResponses, GetSuppressionData, GetSuppressionErrors, GetSuppressionResponses, GetTeamInviteData, GetTeamInviteErrors, GetTeamInviteResponses, GetTemplateData, GetTemplateErrors, GetTemplateResponses, GetUsageData, GetUsageErrors, GetUsageResponses, GetWebhookData, GetWebhookDeliveryData, GetWebhookDeliveryErrors, GetWebhookDeliveryResponses, GetWebhookErrors, GetWebhookEventData, GetWebhookEventErrors, GetWebhookEventResponses, GetWebhookResponses, ListApiKeysData, ListApiKeysErrors, ListApiKeysResponses, ListBillingInvoicesData, ListBillingInvoicesErrors, ListBillingInvoicesResponses, ListBroadcastClickedLinksData, ListBroadcastClickedLinksErrors, ListBroadcastClickedLinksResponses, ListBroadcastRecipientsData, ListBroadcastRecipientsErrors, ListBroadcastRecipientsResponses, ListBroadcastsData, ListBroadcastsErrors, ListBroadcastsResponses, ListClickedLinksData, ListClickedLinksErrors, ListClickedLinksResponses, ListContactPropertiesData, ListContactPropertiesResponses, ListContactsData, ListContactSegmentsData, ListContactSegmentsErrors, ListContactSegmentsResponses, ListContactsErrors, ListContactsResponses, ListDomainsData, ListDomainsErrors, ListDomainsResponses, ListEmailsData, ListEmailsErrors, ListEmailsResponses, ListInboxDraftsData, ListInboxDraftsErrors, ListInboxDraftsResponses, ListInboxesData, ListInboxesErrors, ListInboxesResponses, ListInboxLabelsData, ListInboxLabelsErrors, ListInboxLabelsResponses, ListInboxThreadEmailsData, ListInboxThreadEmailsErrors, ListInboxThreadEmailsResponses, ListInboxThreadNotesData, ListInboxThreadNotesErrors, ListInboxThreadNotesResponses, ListInboxThreadsData, ListInboxThreadsErrors, ListInboxThreadsResponses, ListLinkDomainsData, ListLinkDomainsErrors, ListLinkDomainsResponses, ListLogsData, ListLogsErrors, ListLogsResponses, ListPendingSignupsData, ListPendingSignupsErrors, ListPendingSignupsResponses, ListReceivedEmailAttachmentsData, ListReceivedEmailAttachmentsErrors, ListReceivedEmailAttachmentsResponses, ListReceivedEmailsData, ListReceivedEmailsErrors, ListReceivedEmailsResponses, ListSegmentContactsData, ListSegmentContactsErrors, ListSegmentContactsResponses, ListSegmentsData, ListSegmentsErrors, ListSegmentsResponses, ListSignupFormsData, ListSignupFormsErrors, ListSignupFormsResponses, ListSuppressionsData, ListSuppressionsErrors, ListSuppressionsResponses, ListTeamInvitesData, ListTeamInvitesErrors, ListTeamInvitesResponses, ListTeamMembersData, ListTeamMembersErrors, ListTeamMembersResponses, ListTemplatesData, ListTemplatesErrors, ListTemplatesResponses, ListWebhookDeliveriesData, ListWebhookDeliveriesErrors, ListWebhookDeliveriesResponses, ListWebhookEventAttemptsData, ListWebhookEventAttemptsErrors, ListWebhookEventAttemptsResponses, ListWebhookEventsData, ListWebhookEventsErrors, ListWebhookEventsResponses, ListWebhooksData, ListWebhooksErrors, ListWebhooksResponses, MarkReceivedEmailsData, MarkReceivedEmailsErrors, MarkReceivedEmailsResponses, PatchWebhookData, PatchWebhookErrors, PatchWebhookResponses, PreviewFormWelcomeEmailData, PreviewFormWelcomeEmailErrors, PreviewFormWelcomeEmailResponses, PublishTemplateData, PublishTemplateErrors, PublishTemplateResponses, RedeemActivationInviteData, RedeemActivationInviteErrors, RedeemActivationInviteResponses, RefreshLinkDomainData, RefreshLinkDomainErrors, RefreshLinkDomainResponses, RemoveContactFromSegmentData, RemoveContactFromSegmentErrors, RemoveContactFromSegmentResponses, RemovePendingSignupData, RemovePendingSignupErrors, RemovePendingSignupResponses, RemoveSuppressionsBatchData, RemoveSuppressionsBatchErrors, RemoveSuppressionsBatchResponses, RemoveTeamMemberData, RemoveTeamMemberErrors, RemoveTeamMemberResponses, ReplayWebhookEventData, ReplayWebhookEventErrors, ReplayWebhookEventResponses, ReplyToInboxThreadEmailData, ReplyToInboxThreadEmailErrors, ReplyToInboxThreadEmailResponses, ReplyToReceivedEmailData, ReplyToReceivedEmailErrors, ReplyToReceivedEmailResponses, RequestFreeTrialData, RequestFreeTrialErrors, RequestFreeTrialResponses, RetryWebhookDeliveryData, RetryWebhookDeliveryErrors, RetryWebhookDeliveryResponses, RevokeApiKeyData, RevokeApiKeyErrors, RevokeApiKeyResponses, RevokeTeamInviteData, RevokeTeamInviteErrors, RevokeTeamInviteResponses, RotateWebhookSigningSecretData, RotateWebhookSigningSecretErrors, RotateWebhookSigningSecretResponses, SendBroadcastData, SendBroadcastErrors, SendBroadcastResponses, SendBroadcastTestData, SendBroadcastTestErrors, SendBroadcastTestResponses, SendEmailBatchData, SendEmailBatchErrors, SendEmailBatchResponses, SendEmailData, SendEmailErrors, SendEmailResponses, SendInboxDraftData, SendInboxDraftErrors, SendInboxDraftResponses, ShareEmailData, ShareEmailErrors, ShareEmailResponses, StartCliSignupData, StartCliSignupErrors, StartCliSignupResponses, StartCloudflareDomainConnectData, StartCloudflareDomainConnectErrors, StartCloudflareDomainConnectResponses, StartCloudflareInboundDomainConnectData, StartCloudflareInboundDomainConnectErrors, StartCloudflareInboundDomainConnectResponses, StartLinkDomainDomainConnectData, StartLinkDomainDomainConnectErrors, StartLinkDomainDomainConnectResponses, TestWebhookData, TestWebhookErrors, TestWebhookResponses, UnarchiveBroadcastData, UnarchiveBroadcastErrors, UnarchiveBroadcastResponses, UpdateApiKeyData, UpdateApiKeyErrors, UpdateApiKeyResponses, UpdateBroadcastData, UpdateBroadcastErrors, UpdateBroadcastResponses, UpdateContactData, UpdateContactErrors, UpdateContactPropertyData, UpdateContactPropertyErrors, UpdateContactPropertyResponses, UpdateContactResponses, UpdateDomainReceivingData, UpdateDomainReceivingErrors, UpdateDomainReceivingResponses, UpdateEmailData, UpdateEmailErrors, UpdateEmailResponses, UpdateInboxData, UpdateInboxDraftData, UpdateInboxDraftErrors, UpdateInboxDraftResponses, UpdateInboxErrors, UpdateInboxLabelData, UpdateInboxLabelErrors, UpdateInboxLabelResponses, UpdateInboxResponses, UpdateInboxThreadData, UpdateInboxThreadErrors, UpdateInboxThreadResponses, UpdateReceivedEmailData, UpdateReceivedEmailErrors, UpdateReceivedEmailResponses, UpdateSegmentData, UpdateSegmentErrors, UpdateSegmentResponses, UpdateSignupFormData, UpdateSignupFormErrors, UpdateSignupFormResponses, UpdateTeamMemberData, UpdateTeamMemberErrors, UpdateTeamMemberResponses, UpdateTemplateData, UpdateTemplateErrors, UpdateTemplateResponses, UpdateWebhookData, UpdateWebhookErrors, UpdateWebhookResponses, VerifyCliSignupData, VerifyCliSignupErrors, VerifyCliSignupResponses, VerifyDomainData, VerifyDomainErrors, VerifyDomainResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -125,7 +125,7 @@ export const shareEmail = <ThrowOnError extends boolean = false>(options: Option
 /**
  * Retrieve email metrics
  *
- * Resend-compatible counts and rates over a date range, for transactional and broadcast email together. Leave dimensions out for one totals row; add period, domain, email or broadcast (email and broadcast cannot be combined) to break the numbers down. Each lifecycle timestamp counts in its own period. Sends where every recipient is the SES mailbox simulator are left out. Rates are percentages with one decimal. Open and click metrics need tracking on. Requires the email:read scope.
+ * Resend-compatible counts and rates over a date range, for transactional and broadcast email together. Leave dimensions out for one totals row; add period, domain, email or broadcast (email and broadcast cannot be combined) to break the numbers down. Each lifecycle timestamp counts in its own period. Sends where every recipient is the SES mailbox simulator are left out. Rates are percentages with one decimal. Open and click metrics need tracking on. Add include=providers for a breakdown by mailbox provider (Gmail, Outlook, iCloud, Yahoo, Proton, other). Requires the email:read scope.
  */
 export const getEmailMetrics = <ThrowOnError extends boolean = false>(options?: Options<GetEmailMetricsData, ThrowOnError>): RequestResult<GetEmailMetricsResponses, GetEmailMetricsErrors, ThrowOnError> => (options?.client ?? client).get<GetEmailMetricsResponses, GetEmailMetricsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -310,7 +310,7 @@ export const updateInbox = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * List threads
  *
- * Threads in one folder, most recently active first. query matches the subject and label names (case-insensitive, up to 256 characters); label filters to threads carrying any of the given label ids. read is true only when every message is read; it follows the same read state as the received email API. folder, unread_count and snippet are not in Resend. Requires the inbound:read scope.
+ * Threads in one folder, most recently active first. query takes Gmail-style search, with the operators Resend's dashboard search uses: from:, to: (a full address), label: (a label name), has:attachment, is:read, is:unread, and after: and before: with a YYYY-MM-DD date (UTC; after: includes that day, before: does not). subject: is not in Resend. Words and "quoted phrases" match the subject or a label name, case-insensitive, and every one must match; a leading - excludes a word or phrase. from:, to:, has:attachment, after: and before: describe one message: a thread matches when one of its messages matches all of them, and - negates a term for that message (-has:attachment is a message without one). Dates are when a message was received or sent. Anything else with a colon is searched as plain text. Up to 256 characters and 32 terms; a date that is not valid is a 422 with name validation_error. label filters to threads carrying any of the given label ids. read is true only when every message is read; it follows the same read state as the received email API. folder, unread_count, snippet and assignee_email are not in Resend. Requires the inbound:read scope.
  */
 export const listInboxThreads = <ThrowOnError extends boolean = false>(options: Options<ListInboxThreadsData, ThrowOnError>): RequestResult<ListInboxThreadsResponses, ListInboxThreadsErrors, ThrowOnError> => (options.client ?? client).get<ListInboxThreadsResponses, ListInboxThreadsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -343,7 +343,7 @@ export const getInboxThread = <ThrowOnError extends boolean = false>(options: Op
 /**
  * Update a thread
  *
- * Mark every message read or unread (the same read state the mailbox and GET /v1/emails/receiving show), move the thread to inbox, archive, spam or trash (sent is assigned automatically), apply a label, or remove one with remove_label_id (not in Resend). At least one of read, folder, label_id or remove_label_id. Requires the inbound:read scope; moving to trash is a delete and needs the inbound:delete scope on a key created by a team owner or admin.
+ * Mark every message read or unread (the same read state the mailbox and GET /v1/emails/receiving show), move the thread to inbox, archive, spam or trash (sent is assigned automatically), apply a label, or remove one with remove_label_id (not in Resend). assignee_email (not in Resend's API; named after their inbox.thread.assigned field) assigns the thread to a member of the team, or unassigns it with null; a change sends inbox.thread.assigned or inbox.thread.unassigned. An address that is not a team member is a 422 and nothing changes. At least one of read, folder, label_id, remove_label_id or assignee_email. Requires the inbound:read scope; moving to trash is a delete and needs the inbound:delete scope on a key created by a team owner or admin.
  */
 export const updateInboxThread = <ThrowOnError extends boolean = false>(options: Options<UpdateInboxThreadData, ThrowOnError>): RequestResult<UpdateInboxThreadResponses, UpdateInboxThreadErrors, ThrowOnError> => (options.client ?? client).patch<UpdateInboxThreadResponses, UpdateInboxThreadErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -353,6 +353,43 @@ export const updateInboxThread = <ThrowOnError extends boolean = false>(options:
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * List thread notes
+ *
+ * Internal notes on a thread, oldest first (after walks newer, before walks older). Notes are for the team: they are never emailed, never part of a reply, forward or draft, and no webhook carries them. Not in Resend. Requires the inbound:read scope.
+ */
+export const listInboxThreadNotes = <ThrowOnError extends boolean = false>(options: Options<ListInboxThreadNotesData, ThrowOnError>): RequestResult<ListInboxThreadNotesResponses, ListInboxThreadNotesErrors, ThrowOnError> => (options.client ?? client).get<ListInboxThreadNotesResponses, ListInboxThreadNotesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/inboxes/{inbox_id}/threads/{thread_id}/notes',
+    ...options
+});
+
+/**
+ * Add a thread note
+ *
+ * Add an internal note to a thread as the member the key belongs to. Plain text, up to 5000 characters; a thread holds up to 500 notes. The note is never sent to anyone. Not in Resend. Requires the inbound:read scope.
+ */
+export const createInboxThreadNote = <ThrowOnError extends boolean = false>(options: Options<CreateInboxThreadNoteData, ThrowOnError>): RequestResult<CreateInboxThreadNoteResponses, CreateInboxThreadNoteErrors, ThrowOnError> => (options.client ?? client).post<CreateInboxThreadNoteResponses, CreateInboxThreadNoteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/inboxes/{inbox_id}/threads/{thread_id}/notes',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a thread note
+ *
+ * Remove a note. Its author can remove it, and so can a team owner or admin. Not in Resend. Requires the inbound:read scope.
+ */
+export const deleteInboxThreadNote = <ThrowOnError extends boolean = false>(options: Options<DeleteInboxThreadNoteData, ThrowOnError>): RequestResult<DeleteInboxThreadNoteResponses, DeleteInboxThreadNoteErrors, ThrowOnError> => (options.client ?? client).delete<DeleteInboxThreadNoteResponses, DeleteInboxThreadNoteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/inboxes/{inbox_id}/threads/{thread_id}/notes/{note_id}',
+    ...options
 });
 
 /**
@@ -380,7 +417,7 @@ export const getInboxThreadEmail = <ThrowOnError extends boolean = false>(option
 /**
  * Reply to a thread email
  *
- * Sends real email: a reply from the inbox address, threaded with In-Reply-To and References, through the normal send path (verified domain, suppression, plan limits, credits, safety checks). to is taken from the message: a received message's Reply-To or From, or a sent message's recipients. Passing to or from is refused. Add cc and bcc; 50 recipients at most. subject defaults to Re: plus the thread subject (900 characters at most, the send path's limit). Supports Idempotency-Key. To have a person approve the text first, create a reply draft instead. Requires the inbound:read and email:send scopes.
+ * Sends real email: a reply from the inbox address, threaded with In-Reply-To and References, through the normal send path (verified domain, suppression, plan limits, credits, safety checks). to is taken from the message: a received message's Reply-To or From, or a sent message's recipients. Passing to or from is refused. Add cc and bcc; 50 recipients at most. subject defaults to Re: plus the thread subject (900 characters at most, the send path's limit). attachments take the shape and limits of POST /v1/emails: up to 10 files, 10 MB each and 25 MB in total. Supports Idempotency-Key. To have a person approve the text first, create a reply draft instead. Requires the inbound:read and email:send scopes.
  */
 export const replyToInboxThreadEmail = <ThrowOnError extends boolean = false>(options: Options<ReplyToInboxThreadEmailData, ThrowOnError>): RequestResult<ReplyToInboxThreadEmailResponses, ReplyToInboxThreadEmailErrors, ThrowOnError> => (options.client ?? client).post<ReplyToInboxThreadEmailResponses, ReplyToInboxThreadEmailErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -395,7 +432,7 @@ export const replyToInboxThreadEmail = <ThrowOnError extends boolean = false>(op
 /**
  * Forward a thread email
  *
- * Sends real email: a forward from the inbox address with the original quoted under a forwarded-message banner, through the normal send path. to is required; 50 recipients at most with cc and bcc. html or text is a note above the original. subject defaults to Fwd: plus the thread subject. Attachments of the original are not included. The forward joins the thread. Supports Idempotency-Key. Requires the inbound:read and email:send scopes.
+ * Sends real email: a forward from the inbox address with the original quoted under a forwarded-message banner, through the normal send path. to is required; 50 recipients at most with cc and bcc. html or text is a note above the original. subject defaults to Fwd: plus the thread subject. Attachments of the original are not included; send files with attachments, in the shape and limits of POST /v1/emails. The forward joins the thread. Supports Idempotency-Key. Requires the inbound:read and email:send scopes.
  */
 export const forwardInboxThreadEmail = <ThrowOnError extends boolean = false>(options: Options<ForwardInboxThreadEmailData, ThrowOnError>): RequestResult<ForwardInboxThreadEmailResponses, ForwardInboxThreadEmailErrors, ThrowOnError> => (options.client ?? client).post<ForwardInboxThreadEmailResponses, ForwardInboxThreadEmailErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -484,7 +521,7 @@ export const listInboxDrafts = <ThrowOnError extends boolean = false>(options: O
 /**
  * Create a draft
  *
- * Create a draft for a person to review and send. Nothing is sent, so it needs only the inbound:read scope: give an agent a key without email:send and every message it writes waits here for approval. Omit thread_id for a new conversation; send thread_id and reply_to_email_id together for a reply (recipients are not copied, set to before sending). At least one of to, cc, bcc, subject, text or html must be non-empty; 50 recipients at most; subject up to 900 characters (Resend allows 2000; a longer subject could never be sent here). Returns 201 for a new draft, or 200 when an unsent reply draft for that message already exists, updated with the fields sent.
+ * Create a draft for a person to review and send. Nothing is sent, so it needs only the inbound:read scope: give an agent a key without email:send and every message it writes waits here for approval. Omit thread_id for a new conversation; send thread_id and reply_to_email_id together for a reply (recipients are not copied, set to before sending). At least one of to, cc, bcc, subject, text, html or attachments must be non-empty; 50 recipients at most; subject up to 900 characters (Resend allows 2000; a longer subject could never be sent here). attachments are stored on the draft and sent with it: up to 10 files, 10 MB each and 25 MB in total, the limits of the send path; no path or content_id, as in Resend. Files are kept for 30 days after they are added. Returns 201 for a new draft, or 200 when an unsent reply draft for that message already exists, updated with the fields sent.
  */
 export const createInboxDraft = <ThrowOnError extends boolean = false>(options: Options<CreateInboxDraftData, ThrowOnError>): RequestResult<CreateInboxDraftResponses, CreateInboxDraftErrors, ThrowOnError> => (options.client ?? client).post<CreateInboxDraftResponses, CreateInboxDraftErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -499,7 +536,7 @@ export const createInboxDraft = <ThrowOnError extends boolean = false>(options: 
 /**
  * Delete a draft
  *
- * Discard a draft. Requires the inbound:read scope.
+ * Discard a draft and its files. A draft being sent right now returns 409. Requires the inbound:read scope.
  */
 export const deleteInboxDraft = <ThrowOnError extends boolean = false>(options: Options<DeleteInboxDraftData, ThrowOnError>): RequestResult<DeleteInboxDraftResponses, DeleteInboxDraftErrors, ThrowOnError> => (options.client ?? client).delete<DeleteInboxDraftResponses, DeleteInboxDraftErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -521,7 +558,7 @@ export const getInboxDraft = <ThrowOnError extends boolean = false>(options: Opt
 /**
  * Update a draft
  *
- * Omitted fields stay as they are; null clears one. The result must keep at least one non-empty field and at most 50 recipients. A sent draft, or one being sent, returns 409. Not in Resend: pass revision (from the draft object) to make the edit land only on that version; if the draft changed since, nothing is written and the answer is 409 with code draft_changed and the current revision. Requires the inbound:read scope.
+ * Omitted fields stay as they are; null clears one. attachments replace every file on the draft (null or [] removes them all), as in Resend; not in Resend, an entry { id } keeps a file the draft already holds without sending it again. The result must keep at least one non-empty field and at most 50 recipients. A sent draft, or one being sent, returns 409. Not in Resend: pass revision (from the draft object) to make the edit land only on that version; if the draft changed since, nothing is written and the answer is 409 with code draft_changed and the current revision. Requires the inbound:read scope.
  */
 export const updateInboxDraft = <ThrowOnError extends boolean = false>(options: Options<UpdateInboxDraftData, ThrowOnError>): RequestResult<UpdateInboxDraftResponses, UpdateInboxDraftErrors, ThrowOnError> => (options.client ?? client).patch<UpdateInboxDraftResponses, UpdateInboxDraftErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -534,9 +571,20 @@ export const updateInboxDraft = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
+ * Retrieve a draft attachment
+ *
+ * One file of a draft with a download link that works for 15 minutes, so the person approving a draft can open what was attached. Not in Resend. A sent draft lists the names of its files but no longer stores them: 410. Requires the inbound:read scope.
+ */
+export const getInboxDraftAttachment = <ThrowOnError extends boolean = false>(options: Options<GetInboxDraftAttachmentData, ThrowOnError>): RequestResult<GetInboxDraftAttachmentResponses, GetInboxDraftAttachmentErrors, ThrowOnError> => (options.client ?? client).get<GetInboxDraftAttachmentResponses, GetInboxDraftAttachmentErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/inboxes/{inbox_id}/drafts/{draft_id}/attachments/{attachment_id}',
+    ...options
+});
+
+/**
  * Send a draft
  *
- * Sends real email: the approval step for a draft. It goes out from the inbox address through the normal send path; a reply draft joins its thread with threading headers, a new conversation starts a thread in sent. The draft needs a recipient and a body (and a subject when it is not a reply). The send claims the draft on the version it read, so an edit cannot slip in while it runs. Not in Resend: pass the revision a person reviewed; if the draft changed since, nothing is sent and the answer is 409 with code draft_changed. Without a body this is Resend's call. Sending the same draft twice queues one email; a draft that was already sent returns 409. Requires the inbound:read and email:send scopes.
+ * Sends real email: the approval step for a draft. It goes out from the inbox address through the normal send path; a reply draft joins its thread with threading headers, a new conversation starts a thread in sent. The draft needs a recipient and a body (and a subject when it is not a reply). Its files go with it; a file older than the 30 days a draft keeps them is a 409 that names it. The send claims the draft on the version it read, so an edit cannot slip in while it runs. Not in Resend: pass the revision a person reviewed; if the draft changed since, nothing is sent and the answer is 409 with code draft_changed. Without a body this is Resend's call. Sending the same draft twice queues one email; a draft that was already sent returns 409. Requires the inbound:read and email:send scopes.
  */
 export const sendInboxDraft = <ThrowOnError extends boolean = false>(options: Options<SendInboxDraftData, ThrowOnError>): RequestResult<SendInboxDraftResponses, SendInboxDraftErrors, ThrowOnError> => (options.client ?? client).post<SendInboxDraftResponses, SendInboxDraftErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -797,6 +845,62 @@ export const getUsage = <ThrowOnError extends boolean = false>(options?: Options
 });
 
 /**
+ * Whether the account is active
+ *
+ * A new account is pending until one of three things happens: an invite code is redeemed, a paid plan is bought, or a free-trial request is approved. This says which state the account is in; for an active account it gives the plan and nothing personal. Works with the key smtpfast signup returns while the account is still pending; every other endpoint answers 403 until the account is active. Needs no scope. Not for connected apps.
+ */
+export const getAccountActivation = <ThrowOnError extends boolean = false>(options?: Options<GetAccountActivationData, ThrowOnError>): RequestResult<GetAccountActivationResponses, GetAccountActivationErrors, ThrowOnError> => (options?.client ?? client).get<GetAccountActivationResponses, GetAccountActivationErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/account/activation',
+    ...options
+});
+
+/**
+ * Ask for the free plan
+ *
+ * Sends a free-trial request with the use case, as the activation page does. A person reviews it and the account is emailed when it is approved. A second request changes nothing. Works with the key smtpfast signup returns while the account is still pending; every other endpoint answers 403 until the account is active. Needs no scope. Not for connected apps.
+ */
+export const requestFreeTrial = <ThrowOnError extends boolean = false>(options: Options<RequestFreeTrialData, ThrowOnError>): RequestResult<RequestFreeTrialResponses, RequestFreeTrialErrors, ThrowOnError> => (options.client ?? client).post<RequestFreeTrialResponses, RequestFreeTrialErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/account/activation/free-trial',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate with an invite code
+ *
+ * Activates the account on the free plan with an invite code. Limited to 10 tries a minute. Works with the key smtpfast signup returns while the account is still pending; every other endpoint answers 403 until the account is active. Needs no scope. Not for connected apps.
+ */
+export const redeemActivationInvite = <ThrowOnError extends boolean = false>(options: Options<RedeemActivationInviteData, ThrowOnError>): RequestResult<RedeemActivationInviteResponses, RedeemActivationInviteErrors, ThrowOnError> => (options.client ?? client).post<RedeemActivationInviteResponses, RedeemActivationInviteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/account/activation/invite',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate with a paid plan
+ *
+ * Returns a Stripe Checkout link for a paid plan. A person opens it and pays; the account is active as soon as Stripe confirms the payment, so poll GET /v1/account/activation. For an account that is already active, use POST /v1/billing/checkout. Limited to 10 links an hour. Works with the key smtpfast signup returns while the account is still pending; every other endpoint answers 403 until the account is active. Needs no scope. Not for connected apps.
+ */
+export const createActivationCheckout = <ThrowOnError extends boolean = false>(options: Options<CreateActivationCheckoutData, ThrowOnError>): RequestResult<CreateActivationCheckoutResponses, CreateActivationCheckoutErrors, ThrowOnError> => (options.client ?? client).post<CreateActivationCheckoutResponses, CreateActivationCheckoutErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/account/activation/checkout',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * List team members
  *
  * Everyone on the key's team, oldest first, with their role. Any member can list. Requires the team:read scope.
@@ -878,6 +982,58 @@ export const revokeTeamInvite = <ThrowOnError extends boolean = false>(options: 
 export const getTeamInvite = <ThrowOnError extends boolean = false>(options: Options<GetTeamInviteData, ThrowOnError>): RequestResult<GetTeamInviteResponses, GetTeamInviteErrors, ThrowOnError> => (options.client ?? client).get<GetTeamInviteResponses, GetTeamInviteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/team/invites/{id}',
+    ...options
+});
+
+/**
+ * Get the plan and usage
+ *
+ * The plan the team runs on, its state in Stripe (billing interval, status, renewal or end date, a scheduled move to a smaller plan, a failed payment), usage this month against the plan's limits, and the price and limits of the next plan up. Only keys created by the team owner can call it, because billing is the owner's, as on the billing page. A team with more than one owner gets a 409 with code multiple_owners. Requires the billing:read scope.
+ */
+export const getBilling = <ThrowOnError extends boolean = false>(options?: Options<GetBillingData, ThrowOnError>): RequestResult<GetBillingResponses, GetBillingErrors, ThrowOnError> => (options?.client ?? client).get<GetBillingResponses, GetBillingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/billing',
+    ...options
+});
+
+/**
+ * Get a link to start or change a plan
+ *
+ * Nothing is charged and no plan changes here: the response is a link for a person to open. Without a subscription it is a Stripe Checkout page. With one it is the billing page with the change open in its confirmation dialog, which shows the price before anything is charged. A subscription with an unpaid invoice, one that is set to end, or one with a smaller plan scheduled before an upgrade is refused with the reason. Only keys created by the team owner can call it, because billing is the owner's, as on the billing page. A team with more than one owner gets a 409 with code multiple_owners. Requires the billing:manage scope.
+ */
+export const createBillingCheckout = <ThrowOnError extends boolean = false>(options: Options<CreateBillingCheckoutData, ThrowOnError>): RequestResult<CreateBillingCheckoutResponses, CreateBillingCheckoutErrors, ThrowOnError> => (options.client ?? client).post<CreateBillingCheckoutResponses, CreateBillingCheckoutErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/billing/checkout',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get a link to the billing portal
+ *
+ * A Stripe billing portal link, for cards, invoices, billing details and cancelling. Plan changes are not offered there. With flow set to cancel it opens on the cancel page. Only keys created by the team owner can call it, because billing is the owner's, as on the billing page. A team with more than one owner gets a 409 with code multiple_owners. Requires the billing:manage scope.
+ */
+export const createBillingPortalSession = <ThrowOnError extends boolean = false>(options?: Options<CreateBillingPortalSessionData, ThrowOnError>): RequestResult<CreateBillingPortalSessionResponses, CreateBillingPortalSessionErrors, ThrowOnError> => (options?.client ?? client).post<CreateBillingPortalSessionResponses, CreateBillingPortalSessionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/billing/portal',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+/**
+ * List invoices
+ *
+ * Invoices from Stripe, newest first. Page with after or before, set to an invoice id from the list. Only keys created by the team owner can call it, because billing is the owner's, as on the billing page. A team with more than one owner gets a 409 with code multiple_owners. Requires the billing:read scope.
+ */
+export const listBillingInvoices = <ThrowOnError extends boolean = false>(options?: Options<ListBillingInvoicesData, ThrowOnError>): RequestResult<ListBillingInvoicesResponses, ListBillingInvoicesErrors, ThrowOnError> => (options?.client ?? client).get<ListBillingInvoicesResponses, ListBillingInvoicesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/billing/invoices',
     ...options
 });
 
@@ -1396,6 +1552,62 @@ export const revokeApiKey = <ThrowOnError extends boolean = false>(options: Opti
 export const updateApiKey = <ThrowOnError extends boolean = false>(options: Options<UpdateApiKeyData, ThrowOnError>): RequestResult<UpdateApiKeyResponses, UpdateApiKeyErrors, ThrowOnError> => (options.client ?? client).patch<UpdateApiKeyResponses, UpdateApiKeyErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/api-keys/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Start a CLI login
+ *
+ * Start a device login for a command-line tool. Show the user_code and verification_uri to the person, then poll POST /v1/cli/token every interval seconds with the device_code. A team owner or admin approves the code on the dashboard and picks the team. No API key: this is how a CLI gets its first one. The flow follows RFC 8628 (device authorization grant) with JSON bodies. Limited to 10 a quarter hour per network.
+ */
+export const createCliDeviceCode = <ThrowOnError extends boolean = false>(options?: Options<CreateCliDeviceCodeData, ThrowOnError>): RequestResult<CreateCliDeviceCodeResponses, CreateCliDeviceCodeErrors, ThrowOnError> => (options?.client ?? client).post<CreateCliDeviceCodeResponses, CreateCliDeviceCodeErrors, ThrowOnError>({
+    url: '/v1/cli/device',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+/**
+ * Collect the CLI login key
+ *
+ * Poll with the device_code from POST /v1/cli/device. Until the code is approved this answers 400 with an RFC 8628 error. Once approved it returns a new API key, once, and the code is used up; presenting it again revokes that key. No API key: this is how a CLI gets its first one. The flow follows RFC 8628 (device authorization grant) with JSON bodies.
+ */
+export const exchangeCliDeviceCode = <ThrowOnError extends boolean = false>(options: Options<ExchangeCliDeviceCodeData, ThrowOnError>): RequestResult<ExchangeCliDeviceCodeResponses, ExchangeCliDeviceCodeErrors, ThrowOnError> => (options.client ?? client).post<ExchangeCliDeviceCodeResponses, ExchangeCliDeviceCodeErrors, ThrowOnError>({
+    url: '/v1/cli/token',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Start a signup from the CLI
+ *
+ * Emails an 8-digit code to the address. The answer is the same whether or not the address has an account: an address that has one is emailed to say so, and its code never comes. The address must pass the website's signup checks. Limited per network, per address and overall; codes expire after 10 minutes. No API key: this is how an account starts. Nothing is created until the code from the email comes back.
+ */
+export const startCliSignup = <ThrowOnError extends boolean = false>(options: Options<StartCliSignupData, ThrowOnError>): RequestResult<StartCliSignupResponses, StartCliSignupErrors, ThrowOnError> => (options.client ?? client).post<StartCliSignupResponses, StartCliSignupErrors, ThrowOnError>({
+    url: '/v1/cli/signup',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Finish a CLI signup with the emailed code
+ *
+ * Checks the code and creates the account as the website does: pending until it is activated, on the free plan, with a team, the address confirmed. Returns the first API key, once, with the default key scopes. The key works for GET /v1/account/activation and its actions right away and for everything else once the account is active. A code works once and allows five tries. No API key: this is how an account starts. Nothing is created until the code from the email comes back.
+ */
+export const verifyCliSignup = <ThrowOnError extends boolean = false>(options: Options<VerifyCliSignupData, ThrowOnError>): RequestResult<VerifyCliSignupResponses, VerifyCliSignupErrors, ThrowOnError> => (options.client ?? client).post<VerifyCliSignupResponses, VerifyCliSignupErrors, ThrowOnError>({
+    url: '/v1/cli/signup/verify',
     ...options,
     headers: {
         'Content-Type': 'application/json',

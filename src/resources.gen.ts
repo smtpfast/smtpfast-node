@@ -111,6 +111,20 @@ export function createResources(core: Core) {
         /** Delete a thread. `DELETE /v1/inboxes/{inbox_id}/threads/{thread_id}` */
         delete: (inboxId: string, threadId: string, options?: RequestOptions): Promise<Result<T.DeleteInboxThreadResponses>> =>
           core.call(sdk.deleteInboxThread, { path: { inbox_id: inboxId, thread_id: threadId } }, options),
+        notes: {
+          /** List thread notes. `GET /v1/inboxes/{inbox_id}/threads/{thread_id}/notes` */
+          list: (inboxId: string, threadId: string, query?: T.ListInboxThreadNotesData["query"], options?: RequestOptions): Promise<Result<T.ListInboxThreadNotesResponses>> =>
+            core.call(sdk.listInboxThreadNotes, { path: { inbox_id: inboxId, thread_id: threadId }, query }, options),
+          /** Every item of list, fetching the following pages as you iterate. */
+          listAll: (inboxId: string, threadId: string, query?: Omit<NonNullable<T.ListInboxThreadNotesData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListInboxThreadNotesResponses>>> =>
+            core.paginate(sdk.listInboxThreadNotes, { path: { inbox_id: inboxId, thread_id: threadId }, query }, options),
+          /** Add a thread note. `POST /v1/inboxes/{inbox_id}/threads/{thread_id}/notes` */
+          create: (inboxId: string, threadId: string, body: T.CreateInboxThreadNoteData["body"], options?: RequestOptions): Promise<Result<T.CreateInboxThreadNoteResponses>> =>
+            core.call(sdk.createInboxThreadNote, { path: { inbox_id: inboxId, thread_id: threadId }, body }, options),
+          /** Delete a thread note. `DELETE /v1/inboxes/{inbox_id}/threads/{thread_id}/notes/{note_id}` */
+          delete: (inboxId: string, threadId: string, noteId: string, options?: RequestOptions): Promise<Result<T.DeleteInboxThreadNoteResponses>> =>
+            core.call(sdk.deleteInboxThreadNote, { path: { inbox_id: inboxId, thread_id: threadId, note_id: noteId } }, options),
+        },
         emails: {
           /** List thread emails. `GET /v1/inboxes/{inbox_id}/threads/{thread_id}/emails` */
           list: (inboxId: string, threadId: string, query?: T.ListInboxThreadEmailsData["query"], options?: RequestOptions): Promise<Result<T.ListInboxThreadEmailsResponses>> =>
@@ -168,6 +182,11 @@ export function createResources(core: Core) {
         /** Send a draft. `POST /v1/inboxes/{inbox_id}/drafts/{draft_id}/send` */
         send: (inboxId: string, draftId: string, body?: T.SendInboxDraftData["body"], options?: RequestOptions): Promise<Result<T.SendInboxDraftResponses>> =>
           core.call(sdk.sendInboxDraft, { path: { inbox_id: inboxId, draft_id: draftId }, body }, options),
+        attachments: {
+          /** Retrieve a draft attachment. `GET /v1/inboxes/{inbox_id}/drafts/{draft_id}/attachments/{attachment_id}` */
+          get: (inboxId: string, draftId: string, attachmentId: string, options?: RequestOptions): Promise<Result<T.GetInboxDraftAttachmentResponses>> =>
+            core.call(sdk.getInboxDraftAttachment, { path: { inbox_id: inboxId, draft_id: draftId, attachment_id: attachmentId } }, options),
+        },
       },
     },
     contactProperties: {
@@ -250,6 +269,18 @@ export function createResources(core: Core) {
       /** Usage against the plan. `GET /v1/usage` */
       usage: (options?: RequestOptions): Promise<Result<T.GetUsageResponses>> =>
         core.call(sdk.getUsage, {}, options),
+      /** Whether the account is active. `GET /v1/account/activation` */
+      activation: (options?: RequestOptions): Promise<Result<T.GetAccountActivationResponses>> =>
+        core.call(sdk.getAccountActivation, {}, options),
+      /** Ask for the free plan. `POST /v1/account/activation/free-trial` */
+      requestFreeTrial: (body: T.RequestFreeTrialData["body"], options?: RequestOptions): Promise<Result<T.RequestFreeTrialResponses>> =>
+        core.call(sdk.requestFreeTrial, { body }, options),
+      /** Activate with an invite code. `POST /v1/account/activation/invite` */
+      redeemInvite: (body: T.RedeemActivationInviteData["body"], options?: RequestOptions): Promise<Result<T.RedeemActivationInviteResponses>> =>
+        core.call(sdk.redeemActivationInvite, { body }, options),
+      /** Activate with a paid plan. `POST /v1/account/activation/checkout` */
+      activationCheckout: (body: T.CreateActivationCheckoutData["body"], options?: RequestOptions): Promise<Result<T.CreateActivationCheckoutResponses>> =>
+        core.call(sdk.createActivationCheckout, { body }, options),
     },
     team: {
       members: {
@@ -276,6 +307,29 @@ export function createResources(core: Core) {
         /** Revoke an invitation. `DELETE /v1/team/invites/{id}` */
         revoke: (id: string, options?: RequestOptions): Promise<Result<T.RevokeTeamInviteResponses>> =>
           core.call(sdk.revokeTeamInvite, { path: { id } }, options),
+      },
+    },
+    billing: {
+      /** Get the plan and usage. `GET /v1/billing` */
+      get: (options?: RequestOptions): Promise<Result<T.GetBillingResponses>> =>
+        core.call(sdk.getBilling, {}, options),
+      checkout: {
+        /** Get a link to start or change a plan. `POST /v1/billing/checkout` */
+        create: (body: T.CreateBillingCheckoutData["body"], options?: RequestOptions): Promise<Result<T.CreateBillingCheckoutResponses>> =>
+          core.call(sdk.createBillingCheckout, { body }, options),
+      },
+      portal: {
+        /** Get a link to the billing portal. `POST /v1/billing/portal` */
+        create: (body?: T.CreateBillingPortalSessionData["body"], options?: RequestOptions): Promise<Result<T.CreateBillingPortalSessionResponses>> =>
+          core.call(sdk.createBillingPortalSession, { body }, options),
+      },
+      invoices: {
+        /** List invoices. `GET /v1/billing/invoices` */
+        list: (query?: T.ListBillingInvoicesData["query"], options?: RequestOptions): Promise<Result<T.ListBillingInvoicesResponses>> =>
+          core.call(sdk.listBillingInvoices, { query }, options),
+        /** Every item of list, fetching the following pages as you iterate. */
+        listAll: (query?: Omit<NonNullable<T.ListBillingInvoicesData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListBillingInvoicesResponses>>> =>
+          core.paginate(sdk.listBillingInvoices, { query }, options),
       },
     },
     suppressions: {
@@ -415,6 +469,20 @@ export function createResources(core: Core) {
       /** Revoke API key. `DELETE /v1/api-keys/{id}` */
       revoke: (id: string, options?: RequestOptions): Promise<Result<T.RevokeApiKeyResponses>> =>
         core.call(sdk.revokeApiKey, { path: { id } }, options),
+    },
+    cli: {
+      /** Start a CLI login. `POST /v1/cli/device` */
+      createDeviceCode: (body?: T.CreateCliDeviceCodeData["body"], options?: RequestOptions): Promise<Result<T.CreateCliDeviceCodeResponses>> =>
+        core.call(sdk.createCliDeviceCode, { body }, options),
+      /** Collect the CLI login key. `POST /v1/cli/token` */
+      exchangeDeviceCode: (body: T.ExchangeCliDeviceCodeData["body"], options?: RequestOptions): Promise<Result<T.ExchangeCliDeviceCodeResponses>> =>
+        core.call(sdk.exchangeCliDeviceCode, { body }, options),
+      /** Start a signup from the CLI. `POST /v1/cli/signup` */
+      startSignup: (body: T.StartCliSignupData["body"], options?: RequestOptions): Promise<Result<T.StartCliSignupResponses>> =>
+        core.call(sdk.startCliSignup, { body }, options),
+      /** Finish a CLI signup with the emailed code. `POST /v1/cli/signup/verify` */
+      verifySignup: (body: T.VerifyCliSignupData["body"], options?: RequestOptions): Promise<Result<T.VerifyCliSignupResponses>> =>
+        core.call(sdk.verifyCliSignup, { body }, options),
     },
     webhooks: {
       /** List webhooks. `GET /v1/webhooks` */
