@@ -914,7 +914,7 @@ export const listTeamMembers = <ThrowOnError extends boolean = false>(options?: 
 /**
  * Remove a member
  *
- * Removes the person from the team and revokes their API keys for it. Team resources stay. You cannot remove yourself this way, and the last owner cannot be removed. Owner or admin only; requires the team:manage scope.
+ * Removes the person from the team and revokes their API keys for it. Team resources stay. You cannot remove yourself this way, and the last owner cannot be removed. The owner who pays for the team cannot be removed until they transfer ownership (409). Owner or admin only; requires the team:manage scope.
  */
 export const removeTeamMember = <ThrowOnError extends boolean = false>(options: Options<RemoveTeamMemberData, ThrowOnError>): RequestResult<RemoveTeamMemberResponses, RemoveTeamMemberErrors, ThrowOnError> => (options.client ?? client).delete<RemoveTeamMemberResponses, RemoveTeamMemberErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -925,7 +925,7 @@ export const removeTeamMember = <ThrowOnError extends boolean = false>(options: 
 /**
  * Change a member's role or billing access
  *
- * Send role, can_manage_billing, or both. Owners and admins can change roles under the same rules as the Members page (an admin cannot touch an owner, a team keeps at least one owner). Only an owner can change billing access. The member gets an email when their role changes. Requires the team:manage scope.
+ * Send role, can_manage_billing, or both. Owners and admins can change roles under the same rules as the Members page (an admin cannot touch an owner, a team keeps at least one owner). The owner who pays for a team with several owners keeps the owner role until they transfer ownership: changing it answers 409. Only an owner can change billing access. The member gets an email when their role changes. Requires the team:manage scope.
  */
 export const updateTeamMember = <ThrowOnError extends boolean = false>(options: Options<UpdateTeamMemberData, ThrowOnError>): RequestResult<UpdateTeamMemberResponses, UpdateTeamMemberErrors, ThrowOnError> => (options.client ?? client).patch<UpdateTeamMemberResponses, UpdateTeamMemberErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

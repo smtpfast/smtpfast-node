@@ -473,11 +473,11 @@ export type SendEmailRequest = {
      */
     category?: 'transactional' | 'marketing';
     /**
-     * Not in Resend, which sets tracking per domain. Rewrite this email's links through the click tracker (true) or send them exactly as written (false). Left out, the account's tracking settings apply, including the setting for transactional email, except that a contact-form relay (every recipient on the From domain or a parent or subdomain of it, Reply-To on an unrelated domain, not sent from an inbox) gets no click tracking. Over SMTP, set the X-SMTPfast-Track-Clicks header to true or false instead; it is removed before sending. To keep one link out of tracking, such as a password reset link with a token, add data-smtpfast-track="off" to its <a> tag; the attribute is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400.
+     * Not in Resend, which sets tracking per domain. Rewrite this email's links through the click tracker (true) or send them exactly as written (false). Left out, the account's tracking settings apply, including the setting for transactional email, except that a contact-form relay (every recipient on the From domain or a parent or subdomain of it, Reply-To on an unrelated domain, not sent from an inbox) gets no click tracking. Over SMTP, set the X-SMTPfast-Track-Clicks header to true or false instead; it is removed before sending. To keep one link out of tracking, such as a password reset link with a token, add data-smtpfast-track="off" to its <a> tag; the attribute is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400. Click tracking is available on every plan.
      */
     track_clicks?: boolean;
     /**
-     * Not in Resend. Add the open-tracking pixel to this email (true) or not (false). Left out, the account's tracking settings apply. Over SMTP, set the X-SMTPfast-Track-Opens header to true or false instead; it is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400.
+     * Not in Resend. Add the open-tracking pixel to this email (true) or not (false). Left out, the account's tracking settings apply. Over SMTP, set the X-SMTPfast-Track-Opens header to true or false instead; it is removed before sending. null is the same as leaving it out; any other value that is not true or false is refused with 400. Open tracking is available on every plan.
      */
     track_opens?: boolean;
     /**
@@ -986,7 +986,13 @@ export type CreateBroadcastRequest = {
     markdown?: string;
     html?: string | null;
     text?: string | null;
+    /**
+     * Add the open-tracking pixel to each email. Available on every plan.
+     */
     track_opens?: boolean;
+    /**
+     * Send each link through the click tracker. Available on every plan.
+     */
     track_clicks?: boolean;
     /**
      * Not in Resend. Spread the send evenly over this many minutes from the send time (or scheduled_at): recipient i of N goes out at start + i * window / N. 0 sends to everyone at once. 15 to 4320 (72 hours). Useful on a new sending domain or during the first week's warm-up, where each hour of the window must fit the hourly cap; the daily cap still counts the whole send. null clears it.
@@ -1851,7 +1857,7 @@ export type ApiKey = {
 
 export type CreateWebhookRequest = {
     /**
-     * The URL that will receive webhook POST requests
+     * The URL that will receive webhook POST requests: HTTPS on the standard port (443) of a public host
      */
     url: string;
     /**
@@ -1865,6 +1871,9 @@ export type CreateWebhookRequest = {
 };
 
 export type UpdateWebhookRequest = {
+    /**
+     * HTTPS on the standard port (443) of a public host
+     */
     url?: string;
     /**
      * List of event types to subscribe to. Legacy unprefixed email aliases are accepted and normalized to Resend-style email.* event names.
@@ -6653,6 +6662,10 @@ export type RemoveTeamMemberErrors = {
      */
     404: Error;
     /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
     429: Error;
@@ -6707,6 +6720,10 @@ export type UpdateTeamMemberErrors = {
      * Resource not found
      */
     404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
     /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
