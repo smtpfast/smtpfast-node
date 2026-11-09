@@ -125,7 +125,7 @@ export const shareEmail = <ThrowOnError extends boolean = false>(options: Option
 /**
  * Retrieve email metrics
  *
- * Resend-compatible counts and rates over a date range, for transactional and broadcast email together. Leave dimensions out for one totals row; add period, domain, email or broadcast (email and broadcast cannot be combined) to break the numbers down. Each lifecycle timestamp counts in its own period. Sends where every recipient is the SES mailbox simulator are left out. Rates are percentages with one decimal. Open and click metrics need tracking on. Add include=providers for a breakdown by mailbox provider (Gmail, Outlook, iCloud, Yahoo, Proton, other). Requires the email:read scope.
+ * Resend-compatible counts and rates over a date range, for transactional and broadcast email together. Leave dimensions out for one totals row; add period, domain, email or broadcast (email and broadcast cannot be combined) to break the numbers down. Each lifecycle timestamp counts in its own period. Sends where every recipient is the SES mailbox simulator are left out. Rates are percentages with one decimal. bounce_rate counts hard bounces only, as SES does (bounced_hard: permanent plus undetermined); bounced_soft and soft_bounce_rate count transient bounces such as a full mailbox, and bounced counts both. Open and click metrics need tracking on. Add include=providers for a breakdown by mailbox provider (Gmail, Outlook, iCloud, Yahoo, Proton, other). Requires the email:read scope.
  */
 export const getEmailMetrics = <ThrowOnError extends boolean = false>(options?: Options<GetEmailMetricsData, ThrowOnError>): RequestResult<GetEmailMetricsResponses, GetEmailMetricsErrors, ThrowOnError> => (options?.client ?? client).get<GetEmailMetricsResponses, GetEmailMetricsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -2024,7 +2024,7 @@ export const approvePendingSignup = <ThrowOnError extends boolean = false>(optio
 /**
  * Get analytics
  *
- * Sending and deliverability totals for the account, plus a 30-day daily series. Pass days and/or domain to add a `window` object holding exact counts for that window and sending domain, aggregated in the database rather than sampled from the event log.
+ * Sending and deliverability totals for the account, plus a 30-day daily series. bounceRate counts hard bounces only, over the last 30 days; the bounces object has the hard and soft counts behind it. Pass days and/or domain to add a `window` object holding exact counts for that window and sending domain, aggregated in the database rather than sampled from the event log.
  */
 export const getAnalytics = <ThrowOnError extends boolean = false>(options?: Options<GetAnalyticsData, ThrowOnError>): RequestResult<GetAnalyticsResponses, GetAnalyticsErrors, ThrowOnError> => (options?.client ?? client).get<GetAnalyticsResponses, GetAnalyticsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
