@@ -1150,7 +1150,18 @@ export type BroadcastMetrics = {
     opened?: number;
     clicked?: number;
     unsubscribed?: number;
+    /**
+     * Every bounce, hard plus soft.
+     */
     bounced?: number;
+    /**
+     * Bounces SES marked Permanent or Undetermined: the address does not exist or does not take mail.
+     */
+    hard_bounced?: number;
+    /**
+     * Bounces SES marked Transient: a temporary failure such as a full mailbox.
+     */
+    soft_bounced?: number;
     complained?: number;
     failed?: number;
     canceled?: number;
@@ -1158,7 +1169,18 @@ export type BroadcastMetrics = {
     open_rate?: number;
     click_rate?: number;
     unsubscribe_rate?: number;
+    /**
+     * Hard bounces only, as SES counts them: the same as hard_bounce_rate. Percent of recipients not skipped.
+     */
     bounce_rate?: number;
+    /**
+     * hard_bounced as a percent of recipients not skipped.
+     */
+    hard_bounce_rate?: number;
+    /**
+     * soft_bounced as a percent of recipients not skipped. Not part of bounce_rate.
+     */
+    soft_bounce_rate?: number;
 };
 
 /**
@@ -1179,7 +1201,18 @@ export type MailboxProviderMetrics = {
      * Accepted by the receiving server, complained included.
      */
     delivered: number;
+    /**
+     * Every bounce, hard plus soft.
+     */
     bounced: number;
+    /**
+     * Bounces SES marked Permanent or Undetermined.
+     */
+    hard_bounced?: number;
+    /**
+     * Bounces SES marked Transient, such as a full mailbox.
+     */
+    soft_bounced?: number;
     complained: number;
     /**
      * Delivered with open tracking on: the open rate's denominator.
@@ -1198,9 +1231,13 @@ export type MailboxProviderMetrics = {
      */
     open_rate: number | null;
     /**
-     * bounced / (delivered + bounced).
+     * hard_bounced / (delivered + bounced): hard bounces only, as SES counts them.
      */
     bounce_rate: number | null;
+    /**
+     * soft_bounced / (delivered + bounced). Not part of bounce_rate.
+     */
+    soft_bounce_rate?: number | null;
     /**
      * complained / delivered.
      */
@@ -2065,6 +2102,9 @@ export type Analytics = {
      * Accepted by the receiving server, including those later opened or clicked
      */
     delivered?: number;
+    /**
+     * Emails with status bounced, hard or soft, all time
+     */
     bounced?: number;
     complained?: number;
     /**
@@ -2085,9 +2125,42 @@ export type Analytics = {
      */
     deliveryRate?: number;
     /**
-     * bounced / (sent - awaitingReport), as a percentage
+     * Hard bounce rate over the last 30 days, as a percentage: the same as bounces.hardRate. Hard bounces only, as SES counts them; soft bounces are in bounces.soft.
      */
     bounceRate?: number;
+    /**
+     * Bounces over a rolling window (the last 30 days), counted by when each email was sent. A hard bounce is one SES marked Permanent or Undetermined: the address does not exist or does not take mail. A soft bounce is Transient, a temporary failure such as a full mailbox, and is not part of the bounce rate. A past bounce stays counted even if the address was later unsubscribed or suppressed.
+     */
+    bounces?: {
+        /**
+         * Window length in days
+         */
+        days?: number;
+        /**
+         * Start of the window
+         */
+        from?: string;
+        /**
+         * Emails sent in the window with a delivery or bounce report: the rates are over this
+         */
+        reported?: number;
+        /**
+         * Hard-bounced emails sent in the window
+         */
+        hard?: number;
+        /**
+         * Soft-bounced emails sent in the window
+         */
+        soft?: number;
+        /**
+         * hard / reported, as a percentage
+         */
+        hardRate?: number;
+        /**
+         * soft / reported, as a percentage
+         */
+        softRate?: number;
+    };
     /**
      * Last 30 days, bucketed by the UTC day each email was sent
      */
@@ -2119,7 +2192,13 @@ export type Analytics = {
         counts?: {
             sent?: number;
             delivered?: number;
+            /**
+             * Bounce events SES marked Permanent or Undetermined, not counting refusals by the SES account-level suppression list
+             */
             hard_bounced?: number;
+            /**
+             * Bounce events SES marked Transient
+             */
             soft_bounced?: number;
             complained?: number;
             failed?: number;
