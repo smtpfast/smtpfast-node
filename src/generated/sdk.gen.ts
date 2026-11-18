@@ -914,7 +914,7 @@ export const listTeamMembers = <ThrowOnError extends boolean = false>(options?: 
 /**
  * Remove a member
  *
- * Removes the person from the team and revokes their API keys for it. Team resources stay. You cannot remove yourself this way, and the last owner cannot be removed. The owner who pays for the team cannot be removed until they transfer ownership (409). Owner or admin only; requires the team:manage scope.
+ * Removes the person from the team and revokes their API keys for it. Team resources stay. You cannot remove yourself this way, and the last owner cannot be removed. The owner who pays for the team cannot be removed until they transfer ownership (409). Owner or admin only; requires the team:manage scope. Called with an API key, the member must be within the key's own access: every live key and connected app of the member has only scopes the calling key has, and the member is not an owner. A key never makes someone an admin or an owner. The dashboard is not limited this way.
  */
 export const removeTeamMember = <ThrowOnError extends boolean = false>(options: Options<RemoveTeamMemberData, ThrowOnError>): RequestResult<RemoveTeamMemberResponses, RemoveTeamMemberErrors, ThrowOnError> => (options.client ?? client).delete<RemoveTeamMemberResponses, RemoveTeamMemberErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -925,7 +925,7 @@ export const removeTeamMember = <ThrowOnError extends boolean = false>(options: 
 /**
  * Change a member's role or billing access
  *
- * Send role, can_manage_billing, or both. Owners and admins can change roles under the same rules as the Members page (an admin cannot touch an owner, a team keeps at least one owner). The owner who pays for a team with several owners keeps the owner role until they transfer ownership: changing it answers 409. Only an owner can change billing access. The member gets an email when their role changes. Requires the team:manage scope.
+ * Send role, can_manage_billing, or both. Owners and admins can change roles under the same rules as the Members page (an admin cannot touch an owner, a team keeps at least one owner). The owner who pays for a team with several owners keeps the owner role until they transfer ownership: changing it answers 409. Only an owner can change billing access. The member gets an email when their role changes. Requires the team:manage scope. Called with an API key, the member must be within the key's own access: every live key and connected app of the member has only scopes the calling key has, and the member is not an owner. A key never makes someone an admin or an owner. The dashboard is not limited this way.
  */
 export const updateTeamMember = <ThrowOnError extends boolean = false>(options: Options<UpdateTeamMemberData, ThrowOnError>): RequestResult<UpdateTeamMemberResponses, UpdateTeamMemberErrors, ThrowOnError> => (options.client ?? client).patch<UpdateTeamMemberResponses, UpdateTeamMemberErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -951,7 +951,7 @@ export const listTeamInvites = <ThrowOnError extends boolean = false>(options?: 
 /**
  * Invite someone to the team
  *
- * Emails an invitation link that is valid for 7 days. The person signs in with the invited address to accept. Inviting the same address again sends a fresh link. Needs a paid plan and a free seat. Limited to 20 invitations an hour per inviter and 3 an hour per address. Owner or admin only; requires the team:manage scope.
+ * Emails an invitation link that is valid for 7 days. The person signs in with the invited address to accept. Inviting the same address again sends a fresh link. Needs a paid plan and a free seat. Limited to 20 invitations an hour per inviter and 3 an hour per address. Owner or admin only; requires the team:manage scope. An API key can only invite members (403 key_out_of_reach for an admin); invite admins in the dashboard.
  */
 export const createTeamInvite = <ThrowOnError extends boolean = false>(options: Options<CreateTeamInviteData, ThrowOnError>): RequestResult<CreateTeamInviteResponses, CreateTeamInviteErrors, ThrowOnError> => (options.client ?? client).post<CreateTeamInviteResponses, CreateTeamInviteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -1521,7 +1521,7 @@ export const listApiKeys = <ThrowOnError extends boolean = false>(options?: Opti
 /**
  * Create API key
  *
- * Generate a new API key. The full key value is returned only once in the response. Store it securely.
+ * Generate a new API key. The full key value is returned only once in the response. Store it securely. Requires the apikey:manage scope when called with an API key. Called with an API key, the request may only reach keys with no more access than that key: a new or edited key gets only scopes the calling key has, never apikey:manage, and a key with scopes the calling key lacks, or made by a member with a higher role than the calling key's creator, cannot be edited or revoked. The dashboard is not limited this way. Without scopes the new key gets the default set, so a calling key that lacks any of those must name the scopes.
  */
 export const createApiKey = <ThrowOnError extends boolean = false>(options: Options<CreateApiKeyData, ThrowOnError>): RequestResult<CreateApiKeyResponses, CreateApiKeyErrors, ThrowOnError> => (options.client ?? client).post<CreateApiKeyResponses, CreateApiKeyErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -1536,7 +1536,7 @@ export const createApiKey = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Revoke API key
  *
- * Permanently revoke an API key. Any requests using this key will be rejected immediately.
+ * Permanently revoke an API key. Any requests using this key will be rejected immediately. Requires the apikey:manage scope when called with an API key. Called with an API key, the request may only reach keys with no more access than that key: a new or edited key gets only scopes the calling key has, never apikey:manage, and a key with scopes the calling key lacks, or made by a member with a higher role than the calling key's creator, cannot be edited or revoked. The dashboard is not limited this way.
  */
 export const revokeApiKey = <ThrowOnError extends boolean = false>(options: Options<RevokeApiKeyData, ThrowOnError>): RequestResult<RevokeApiKeyResponses, RevokeApiKeyErrors, ThrowOnError> => (options.client ?? client).delete<RevokeApiKeyResponses, RevokeApiKeyErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -1547,7 +1547,7 @@ export const revokeApiKey = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Update API key
  *
- * Rename a key or change its scopes. The secret is unchanged; scope changes apply on the key's next request. Requires the apikey:manage scope when called with an API key.
+ * Rename a key or change its scopes. The secret is unchanged; scope changes apply on the key's next request. Requires the apikey:manage scope when called with an API key. Called with an API key, the request may only reach keys with no more access than that key: a new or edited key gets only scopes the calling key has, never apikey:manage, and a key with scopes the calling key lacks, or made by a member with a higher role than the calling key's creator, cannot be edited or revoked. The dashboard is not limited this way.
  */
 export const updateApiKey = <ThrowOnError extends boolean = false>(options: Options<UpdateApiKeyData, ThrowOnError>): RequestResult<UpdateApiKeyResponses, UpdateApiKeyErrors, ThrowOnError> => (options.client ?? client).patch<UpdateApiKeyResponses, UpdateApiKeyErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
