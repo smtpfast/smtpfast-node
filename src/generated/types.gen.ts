@@ -485,7 +485,7 @@ export type SendEmailRequest = {
      */
     html?: string;
     /**
-     * Plain text fallback body. Supports the same `{{unsubscribe_url}}` placeholder as the HTML body.
+     * Plain text fallback body. Supports the same `{{unsubscribe_url}}` placeholder as the HTML body. When left out, a text part is generated from the html: from its first 512 KB (524,288 characters), with a closing line that points to the HTML version when it is longer.
      */
     text?: string;
 };
@@ -495,6 +495,19 @@ export type SendEmailRequest = {
  */
 export type SendEmailResponse = {
     id: string;
+    /**
+     * Not in Resend. Present only when the send was accepted with something to check. category_not_set: the request had no category (and no X-SMTPfast-Category header), so the email was sent as marketing, with a one-click unsubscribe link.
+     */
+    warnings?: Array<SendWarning>;
+};
+
+export type SendWarning = {
+    code: string;
+    message: string;
+    /**
+     * Batch sends only: the indexes of the items the warning is about, in request order.
+     */
+    items?: Array<number>;
 };
 
 export type Email = {
@@ -645,6 +658,10 @@ export type BatchSendResponse = {
     data: Array<{
         id: string;
     }>;
+    /**
+     * Present only when there is something to check. category_not_set lists in items the emails sent without a category, which went out as marketing.
+     */
+    warnings?: Array<SendWarning>;
 };
 
 export type CreateContactRequest = {
@@ -984,6 +1001,9 @@ export type CreateBroadcastRequest = {
      * Markdown body. Must include {{unsubscribe_url}} or {{{RESEND_UNSUBSCRIBE_URL}}} before sending.
      */
     markdown?: string;
+    /**
+     * HTML body, at most 100,000 characters. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
+     */
     html?: string | null;
     text?: string | null;
     /**
@@ -1281,7 +1301,7 @@ export type CreateTemplateRequest = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string;
     /**
@@ -1325,7 +1345,7 @@ export type UpdateTemplateRequest = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string | null;
     /**
@@ -1718,9 +1738,13 @@ export type Domain = {
      */
     name?: string;
     /**
-     * GET /v1/domains/{id} answers pending for a verified domain whose required records are no longer live.
+     * The stored status, which gates sending: verified once DKIM and the email provider identity are verified. POST /v1/domains/{id}/verify and the background check update it. A required record that is not live right now does not change it; dns_live, verification_phase and each record's live_check show that.
      */
     status: 'pending' | 'verifying' | 'verified' | 'failed';
+    /**
+     * GET /v1/domains/{id} only. True when every required record (DKIM, SPF, DMARC, MAIL FROM) matches a live lookup at the domain's own nameservers. A verified domain with dns_live false still sends; fix the records each live_check marks.
+     */
+    dns_live?: boolean;
     /**
      * Inbound email for the domain
      */
@@ -1825,7 +1849,7 @@ export type CreateApiKeyRequest = {
      */
     name: string;
     /**
-     * Optional list of scopes to restrict the key. Available: email:send, email:read, domain:read, domain:write, contact:read, contact:write, form:read, form:write, webhook:read, webhook:write, logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage, apikey:manage. If omitted the key gets the default set: everything except logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage and apikey:manage. Listing, creating or revoking keys through the API requires apikey:manage.
+     * Optional list of scopes to restrict the key. Available: email:send, email:read, domain:read, domain:write, contact:read, contact:write, form:read, form:write, webhook:read, webhook:write, logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage, apikey:manage. If omitted the key gets the default set: everything except logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage and apikey:manage. Listing, creating or revoking keys through the API requires apikey:manage, and a key can only give a new key scopes it has itself, never apikey:manage.
      */
     scopes?: Array<string>;
 };
@@ -2533,7 +2557,7 @@ export type CreateTemplateRequestWritable = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string;
     /**
@@ -2577,7 +2601,7 @@ export type UpdateTemplateRequestWritable = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string | null;
     /**
@@ -6733,9 +6757,13 @@ export type RemoveTeamMemberErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller may not change this member: their role does not allow it, or the calling API key reaches past its own access. code key_out_of_reach (scopes names what the member's keys have beyond the calling key; empty for an owner, or for a role above member), key_revoked or missing_scope (the calling key was revoked or lost team:manage while the request waited).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'key_out_of_reach' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -6792,9 +6820,13 @@ export type UpdateTeamMemberErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller may not change this member: their role does not allow it, or the calling API key reaches past its own access. code key_out_of_reach (scopes names what the member's keys have beyond the calling key; empty for an owner, or for a role above member), key_revoked or missing_scope (the calling key was revoked or lost team:manage while the request waited).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'key_out_of_reach' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -6887,9 +6919,13 @@ export type CreateTeamInviteErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller is not an owner or admin, the plan has no free seat, or an API key asked for an admin (code key_out_of_reach).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'key_out_of_reach' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Conflict - the resource already exists or changed meanwhile
      */
@@ -9198,6 +9234,14 @@ export type CreateApiKeyErrors = {
      */
     401: Error;
     /**
+     * Forbidden. The caller is not a team owner or admin, or the calling API key reaches past its own access: code scope_not_grantable (scopes names what it may not grant), key_out_of_reach (the target key has the scopes named, or was made by a member with a higher role), expiring_key (a connected app's token cannot create keys), key_revoked or missing_scope (the calling key was revoked or lost apikey:manage while the request waited).
+     */
+    403: {
+        error: string;
+        code?: 'scope_not_grantable' | 'key_out_of_reach' | 'expiring_key' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
+    /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
     429: Error;
@@ -9232,9 +9276,21 @@ export type RevokeApiKeyData = {
 
 export type RevokeApiKeyErrors = {
     /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
      * Invalid or missing API key
      */
     401: Error;
+    /**
+     * Forbidden. The caller is not a team owner or admin, or the calling API key reaches past its own access: code scope_not_grantable (scopes names what it may not grant), key_out_of_reach (the target key has the scopes named, or was made by a member with a higher role), expiring_key (a connected app's token cannot create keys), key_revoked or missing_scope (the calling key was revoked or lost apikey:manage while the request waited).
+     */
+    403: {
+        error: string;
+        code?: 'scope_not_grantable' | 'key_out_of_reach' | 'expiring_key' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -9294,9 +9350,13 @@ export type UpdateApiKeyErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller is not a team owner or admin, or the calling API key reaches past its own access: code scope_not_grantable (scopes names what it may not grant), key_out_of_reach (the target key has the scopes named, or was made by a member with a higher role), expiring_key (a connected app's token cannot create keys), key_revoked or missing_scope (the calling key was revoked or lost apikey:manage while the request waited).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'scope_not_grantable' | 'key_out_of_reach' | 'expiring_key' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -9317,12 +9377,7 @@ export type UpdateApiKeyResponses = {
     /**
      * The updated key
      */
-    200: {
-        id?: string;
-        name?: string;
-        keyPrefix?: string;
-        scopes?: Array<string>;
-    };
+    200: ApiKey;
 };
 
 export type UpdateApiKeyResponse = UpdateApiKeyResponses[keyof UpdateApiKeyResponses];
