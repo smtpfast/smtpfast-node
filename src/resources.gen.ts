@@ -239,6 +239,14 @@ export function createResources(core: Core) {
         remove: (id: string, segmentId: string, options?: RequestOptions): Promise<Result<T.RemoveContactFromSegmentResponses>> =>
           core.call(sdk.removeContactFromSegment, { path: { id, segment_id: segmentId } }, options),
       },
+      topics: {
+        /** List a contact's topics. `GET /v1/contacts/{id}/topics` */
+        list: (id: string, options?: RequestOptions): Promise<Result<T.ListContactTopicsResponses>> =>
+          core.call(sdk.listContactTopics, { path: { id } }, options),
+        /** Update a contact's topics. `PATCH /v1/contacts/{id}/topics` */
+        update: (id: string, body: T.UpdateContactTopicsData["body"], options?: RequestOptions): Promise<Result<T.UpdateContactTopicsResponses>> =>
+          core.call(sdk.updateContactTopics, { path: { id }, body }, options),
+      },
     },
     segments: {
       /** List segments. `GET /v1/segments` */
@@ -331,6 +339,23 @@ export function createResources(core: Core) {
         listAll: (query?: Omit<NonNullable<T.ListBillingInvoicesData["query"]>, "before" | "page" | "latest">, options?: RequestOptions): AsyncIterable<ItemOf<Result<T.ListBillingInvoicesResponses>>> =>
           core.paginate(sdk.listBillingInvoices, { query }, options),
       },
+    },
+    topics: {
+      /** List topics. `GET /v1/topics` */
+      list: (options?: RequestOptions): Promise<Result<T.ListTopicsResponses>> =>
+        core.call(sdk.listTopics, {}, options),
+      /** Create a topic. `POST /v1/topics` */
+      create: (body: T.CreateTopicData["body"], options?: RequestOptions): Promise<Result<T.CreateTopicResponses>> =>
+        core.call(sdk.createTopic, { body }, options),
+      /** Retrieve a topic. `GET /v1/topics/{id}` */
+      get: (id: string, options?: RequestOptions): Promise<Result<T.GetTopicResponses>> =>
+        core.call(sdk.getTopic, { path: { id } }, options),
+      /** Update a topic. `PATCH /v1/topics/{id}` */
+      update: (id: string, body: T.UpdateTopicData["body"], options?: RequestOptions): Promise<Result<T.UpdateTopicResponses>> =>
+        core.call(sdk.updateTopic, { path: { id }, body }, options),
+      /** Delete a topic. `DELETE /v1/topics/{id}` */
+      delete: (id: string, options?: RequestOptions): Promise<Result<T.DeleteTopicResponses>> =>
+        core.call(sdk.deleteTopic, { path: { id } }, options),
     },
     suppressions: {
       /** Suppress addresses in bulk. `POST /v1/suppressions/batch/add` */

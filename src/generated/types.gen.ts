@@ -409,7 +409,7 @@ export type SendEmailRequest = {
         };
     };
     /**
-     * Up to 10 files, base64 encoded, 25 MB per message in total. A content_id makes the part inline: reference it from the HTML as cid:<content_id>.
+     * Up to 10 files, base64 encoded, 10 MB each and 25 MB per message in total (413 over a limit). A content_id makes the part inline: reference it from the HTML as cid:<content_id>. On POST /v1/emails and on each batch item, a file whose name ends in an extension Amazon SES blocks (.exe, .bat, .js, .tmp and others; see https://docs.aws.amazon.com/ses/latest/dg/attachments.html) is refused with 422, and nothing is sent.
      */
     attachments?: Array<{
         filename: string;
@@ -469,7 +469,7 @@ export type SendEmailRequest = {
      */
     scheduled_at?: string;
     /**
-     * Defaults to marketing. Label receipts, password resets and other transactional mail transactional so a marketing opt-out does not block them; unlabelled mail is treated as marketing. Over SMTP, set the X-SMTPfast-Category header instead; it is removed before sending. An email whose html or text (for a template, the rendered body) contains an unsubscribe placeholder is always marketing. A marketing email carries the one-click List-Unsubscribe header and is not sent to anyone who unsubscribed. A transactional email has no List-Unsubscribe header and still goes to addresses whose suppression has scope marketing (a recipient's own unsubscribe, or a manual suppression created with scope marketing), but not to addresses with scope all: hard bounces, complaints, and manual suppressions, which block everything by default. Transactional means mail the recipient needs because of an action or account; labelling promotions transactional is not allowed. Any other value is refused with 400.
+     * Defaults to marketing. Label receipts, password resets and other transactional mail transactional so a marketing opt-out does not block them; unlabelled mail is treated as marketing. Over SMTP, set the X-SMTPfast-Category header instead; it is removed before sending. An SMTP message without the header takes the category set on its API key (smtp_category). An email whose html or text (for a template, the rendered body) contains an unsubscribe placeholder is always marketing. A marketing email carries the one-click List-Unsubscribe header and is not sent to anyone who unsubscribed. A transactional email has no List-Unsubscribe header and still goes to addresses whose suppression has scope marketing (a recipient's own unsubscribe, or a manual suppression created with scope marketing), but not to addresses with scope all: hard bounces, complaints, and manual suppressions, which block everything by default. Transactional means mail the recipient needs because of an action or account; labelling promotions transactional is not allowed. Any other value is refused with 400.
      */
     category?: 'transactional' | 'marketing';
     /**
@@ -485,7 +485,7 @@ export type SendEmailRequest = {
      */
     html?: string;
     /**
-     * Plain text fallback body. Supports the same `{{unsubscribe_url}}` placeholder as the HTML body.
+     * Plain text fallback body. Supports the same `{{unsubscribe_url}}` placeholder as the HTML body. When left out, a text part is generated from the html: from its first 512 KB (524,288 characters), with a closing line that points to the HTML version when it is longer.
      */
     text?: string;
 };
@@ -495,6 +495,19 @@ export type SendEmailRequest = {
  */
 export type SendEmailResponse = {
     id: string;
+    /**
+     * Not in Resend. Present only when the send was accepted with something to check. category_not_set: the request had no category (and no X-SMTPfast-Category header), so the email was sent as marketing, with a one-click unsubscribe link.
+     */
+    warnings?: Array<SendWarning>;
+};
+
+export type SendWarning = {
+    code: string;
+    message: string;
+    /**
+     * Batch sends only: the indexes of the items the warning is about, in request order.
+     */
+    items?: Array<number>;
 };
 
 export type Email = {
@@ -619,7 +632,7 @@ export type EmailList = {
 };
 
 /**
- * JSON array of email objects (1 to 100). Each item accepts the same fields as POST /v1/emails.
+ * JSON array of email objects (1 to 100). Each item accepts the same fields as POST /v1/emails, attachments included, with the same per-message limits. All the attachments in one batch together can be at most 25 MB.
  */
 export type BatchSendRequest = Array<SendEmailRequest>;
 
@@ -645,6 +658,10 @@ export type BatchSendResponse = {
     data: Array<{
         id: string;
     }>;
+    /**
+     * Present only when there is something to check. category_not_set lists in items the emails sent without a category, which went out as marketing.
+     */
+    warnings?: Array<SendWarning>;
 };
 
 export type CreateContactRequest = {
@@ -973,6 +990,10 @@ export type CreateBroadcastRequest = {
     segment_id?: string;
     audience_meta?: AudienceMeta;
     /**
+     * Resend-compatible. Only contacts subscribed to this topic get the broadcast (their own opt-in, or the topic default), and its unsubscribe link and one-click header remove that topic only. Contacts who unsubscribed from everything and suppressed addresses are always left out. Omit it, or send null, to send to every subscribed contact in the audience.
+     */
+    topic_id?: string | null;
+    /**
      * Not in Resend, and only on create (PATCH ignores it). Start from a template (id or alias): its current content, as the template editor shows it, is copied into the new draft, with declared fallbacks written inline. Fields sent alongside win. name defaults to the template's name.
      */
     template_id?: string;
@@ -984,6 +1005,9 @@ export type CreateBroadcastRequest = {
      * Markdown body. Must include {{unsubscribe_url}} or {{{RESEND_UNSUBSCRIBE_URL}}} before sending.
      */
     markdown?: string;
+    /**
+     * HTML body, at most 100,000 characters. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
+     */
     html?: string | null;
     text?: string | null;
     /**
@@ -1038,6 +1062,10 @@ export type Broadcast = {
      * The segment the broadcast goes to when audience is segment, otherwise null
      */
     segment_id?: string | null;
+    /**
+     * The topic the broadcast belongs to: only contacts subscribed to it get it, and its unsubscribe link removes that topic only. null: every subscribed contact in the audience.
+     */
+    topic_id?: string | null;
     from?: string | null;
     reply_to?: string | null;
     subject?: string | null;
@@ -1281,7 +1309,7 @@ export type CreateTemplateRequest = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string;
     /**
@@ -1325,7 +1353,7 @@ export type UpdateTemplateRequest = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string | null;
     /**
@@ -1502,6 +1530,14 @@ export type SignupForm = {
      */
     welcome_email_markdown?: string | null;
     /**
+     * The topic a signup subscribes the contact to, or null.
+     */
+    topic_id?: string | null;
+    /**
+     * Shown under the form and stored with each topic opt-in.
+     */
+    consent_text?: string | null;
+    /**
      * Welcome emails sent and skipped for this form, and how many were delivered, opened and clicked. List items leave it out.
      */
     welcome_stats?: {
@@ -1633,6 +1669,14 @@ export type CreateSignupFormRequest = {
      * Welcome email body as Markdown.
      */
     welcome_email_markdown?: string | null;
+    /**
+     * A signup subscribes the contact to this topic only. Existing contacts can sign up too, and nothing else about them changes; a contact who unsubscribed from everything stays unsubscribed. null removes the topic, and the form adds contacts to the list as before.
+     */
+    topic_id?: string | null;
+    /**
+     * Shown under the form and stored with each topic opt-in.
+     */
+    consent_text?: string | null;
 };
 
 /**
@@ -1672,6 +1716,14 @@ export type UpdateSignupFormRequest = {
      * Welcome email body as Markdown.
      */
     welcome_email_markdown?: string | null;
+    /**
+     * A signup subscribes the contact to this topic only. Existing contacts can sign up too, and nothing else about them changes; a contact who unsubscribed from everything stays unsubscribed. null removes the topic, and the form adds contacts to the list as before.
+     */
+    topic_id?: string | null;
+    /**
+     * Shown under the form and stored with each topic opt-in.
+     */
+    consent_text?: string | null;
 };
 
 export type AddDomainRequest = {
@@ -1718,9 +1770,13 @@ export type Domain = {
      */
     name?: string;
     /**
-     * GET /v1/domains/{id} answers pending for a verified domain whose required records are no longer live.
+     * The stored status, which gates sending: verified once DKIM and the email provider identity are verified. POST /v1/domains/{id}/verify and the background check update it. A required record that is not live right now does not change it; dns_live, verification_phase and each record's live_check show that.
      */
     status: 'pending' | 'verifying' | 'verified' | 'failed';
+    /**
+     * GET /v1/domains/{id} only. True when every required record (DKIM, SPF, DMARC, MAIL FROM) matches a live lookup at the domain's own nameservers. A verified domain with dns_live false still sends; fix the records each live_check marks.
+     */
+    dns_live?: boolean;
     /**
      * Inbound email for the domain
      */
@@ -1825,9 +1881,13 @@ export type CreateApiKeyRequest = {
      */
     name: string;
     /**
-     * Optional list of scopes to restrict the key. Available: email:send, email:read, domain:read, domain:write, contact:read, contact:write, form:read, form:write, webhook:read, webhook:write, logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage, apikey:manage. If omitted the key gets the default set: everything except logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage and apikey:manage. Listing, creating or revoking keys through the API requires apikey:manage.
+     * Optional list of scopes to restrict the key. Available: email:send, email:read, domain:read, domain:write, contact:read, contact:write, form:read, form:write, webhook:read, webhook:write, logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage, apikey:manage. If omitted the key gets the default set: everything except logs:read, inbound:read, inbound:delete, team:read, team:manage, billing:read, billing:manage and apikey:manage. Listing, creating or revoking keys through the API requires apikey:manage, and a key can only give a new key scopes it has itself, never apikey:manage.
      */
     scopes?: Array<string>;
+    /**
+     * Not in Resend. The category of mail sent over SMTP with this key when the message has no X-SMTPfast-Category header. transactional: no List-Unsubscribe header, and a recipient's marketing opt-out does not block it (use it for a key that only sends sign-in, password-reset and receipt mail, for example from Supabase Auth or Firebase). marketing: the one-click unsubscribe header and every opt-out apply (use it for newsletters). A message with an unsubscribe placeholder is always marketing. Sends through the HTTP API are not affected; they use the category field. Defaults to marketing. Never set transactional on a key that sends newsletters or promotions.
+     */
+    smtp_category?: 'transactional' | 'marketing';
 };
 
 /**
@@ -1839,6 +1899,10 @@ export type ApiKeyCreated = {
     key?: string;
     prefix?: string;
     scopes?: Array<string>;
+    /**
+     * The category of unlabelled SMTP mail sent with this key
+     */
+    smtp_category?: 'transactional' | 'marketing';
     created_at?: string;
 };
 
@@ -1879,6 +1943,10 @@ export type ApiKey = {
     name: string;
     prefix: string;
     scopes: Array<string>;
+    /**
+     * The category of unlabelled SMTP mail sent with this key
+     */
+    smtp_category?: 'transactional' | 'marketing';
     created_at: string;
     last_used_at?: string | null;
     revoked_at?: string | null;
@@ -2091,11 +2159,11 @@ export type Analytics = {
      */
     sent?: number;
     /**
-     * Emails sent in the last 24 hours
+     * Emails sent in the last 24 hours (rolling, ending now; not since midnight)
      */
     today?: number;
     /**
-     * Emails sent in the last 7 days
+     * Emails sent in the last 7 x 24 hours (rolling, ending now; not calendar days)
      */
     thisWeek?: number;
     /**
@@ -2137,7 +2205,7 @@ export type Analytics = {
          */
         days?: number;
         /**
-         * Start of the window
+         * Start of the window: the time of the request minus 30 x 24 hours
          */
         from?: string;
         /**
@@ -2162,7 +2230,7 @@ export type Analytics = {
         softRate?: number;
     };
     /**
-     * Last 30 days, bucketed by the UTC day each email was sent
+     * 30 UTC calendar dates ending today (today is still in progress), bucketed by the UTC day each email was sent
      */
     daily?: Array<{
         date?: string;
@@ -2182,11 +2250,17 @@ export type Analytics = {
         tier?: string;
     };
     /**
-     * Present when days or domain is passed
+     * Present when days or domain is passed. A rolling window from now minus days x 24 hours to now, in UTC. sent and delivered count emails by when they were sent, failed by when they were created, and the bounce and complaint counts by when the report arrived.
      */
     window?: {
         days?: number;
+        /**
+         * Start of the window: to minus days x 24 hours
+         */
         from?: string;
+        /**
+         * End of the window: the time of the request
+         */
         to?: string;
         domain?: string | null;
         counts?: {
@@ -2499,6 +2573,124 @@ export type Invoice = {
     invoice_pdf: string | null;
 };
 
+export type TopicSummary = {
+    id: string;
+    name: string;
+    description: string | null;
+    /**
+     * The subscription of a contact that never chose. Fixed at creation.
+     */
+    default_subscription: 'opt_in' | 'opt_out';
+    /**
+     * public: on every contact's preference page. private: only on the page of contacts opted in.
+     */
+    visibility: 'public' | 'private';
+    created_at: string;
+    updated_at: string;
+};
+
+export type Topic = {
+    object: string;
+    id: string;
+    name: string;
+    description: string | null;
+    /**
+     * The subscription of a contact that never chose. Fixed at creation.
+     */
+    default_subscription: 'opt_in' | 'opt_out';
+    /**
+     * public: on every contact's preference page. private: only on the page of contacts opted in.
+     */
+    visibility: 'public' | 'private';
+    created_at: string;
+    updated_at: string;
+    /**
+     * Create only, when subscribe_existing_contacts was true: how many contacts were opted in.
+     */
+    subscribed_contacts?: number;
+};
+
+export type TopicList = {
+    object: string;
+    /**
+     * Always false: every topic is in one page
+     */
+    has_more: boolean;
+    data: Array<TopicSummary>;
+    total: number;
+    topic_limit: number;
+    /**
+     * Contacts subscribed and not suppressed now: what subscribe_existing_contacts would opt in to a new topic.
+     */
+    subscribed_contacts: number;
+};
+
+export type CreateTopicRequest = {
+    name: string;
+    description?: string | null;
+    /**
+     * The subscription of a contact that never chose. Fixed at creation.
+     */
+    default_subscription: 'opt_in' | 'opt_out';
+    /**
+     * public: on every contact's preference page. private: only on the page of contacts opted in.
+     */
+    visibility?: 'public' | 'private';
+    /**
+     * Not in Resend. Only with default_subscription opt_out: opt in every contact who is subscribed and not suppressed now.
+     */
+    subscribe_existing_contacts?: boolean;
+};
+
+export type UpdateTopicRequest = {
+    name?: string;
+    description?: string | null;
+    /**
+     * public: on every contact's preference page. private: only on the page of contacts opted in.
+     */
+    visibility?: 'public' | 'private';
+};
+
+export type ContactTopic = {
+    /**
+     * The topic ID
+     */
+    id: string;
+    name: string;
+    description: string | null;
+    /**
+     * The contact's choice, else the topic default
+     */
+    subscription: 'opt_in' | 'opt_out';
+    default_subscription: 'opt_in' | 'opt_out';
+    visibility: 'public' | 'private';
+    /**
+     * Where the contact's choice was made; null when the default applies
+     */
+    source: 'api' | 'dashboard' | 'form' | 'unsubscribe_link' | 'preference_page' | 'backfill' | null;
+    /**
+     * When the contact chose; null when the default applies
+     */
+    updated_at: string | null;
+};
+
+export type ContactTopicList = {
+    object: string;
+    has_more: boolean;
+    data: Array<ContactTopic>;
+    total: number;
+};
+
+export type UpdateContactTopicsRequest = {
+    topics: Array<{
+        /**
+         * The topic ID
+         */
+        id: string;
+        subscription: 'opt_in' | 'opt_out';
+    }>;
+};
+
 export type TemplateVariableWritable = {
     /**
      * Use it in the content as {{{KEY}}}. Letters, digits and underscores. FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL, RESEND_UNSUBSCRIBE_URL, contact and this are reserved.
@@ -2533,7 +2725,7 @@ export type CreateTemplateRequestWritable = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string;
     /**
@@ -2577,7 +2769,7 @@ export type UpdateTemplateRequestWritable = {
      */
     reply_to?: string | Array<string> | null;
     /**
-     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}.
+     * The HTML body. Variables are written {{{KEY}}}, optionally with an inline fallback: {{{KEY|default}}}. HTML with merge tags is parsed to place each value, so it must stay within 131,072 characters, 10,000 tags, 300 merge tags, 256 levels of nesting and 256 attributes on one element, without heavily misplaced markup. Over that, saving or sending it answers 422 with code html_too_complex.
      */
     html?: string | null;
     /**
@@ -2816,6 +3008,14 @@ export type SendEmailErrors = {
      */
     403: Error;
     /**
+     * Payload too large - over a size limit
+     */
+    413: Error;
+    /**
+     * The request is well formed but cannot be carried out in the current state, for example an unpublished template
+     */
+    422: Error;
+    /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
     429: Error;
@@ -2866,6 +3066,10 @@ export type SendEmailBatchErrors = {
      * Conflict - the resource already exists or changed meanwhile
      */
     409: Error;
+    /**
+     * Payload too large - over a size limit
+     */
+    413: Error;
     /**
      * The request is well formed but cannot be carried out in the current state, for example an unpublished template
      */
@@ -3110,15 +3314,15 @@ export type GetEmailMetricsData = {
     path?: never;
     query?: {
         /**
-         * ISO 8601 date or datetime. A date means midnight in timezone. Defaults to 6 days before end_date.
+         * ISO 8601 date or datetime; a bare date means midnight in timezone (UTC by default), so start_date=2026-11-17 starts at 2026-11-17T00:00:00Z, not 7 x 24 hours before now. Default: midnight, in timezone, of the day six days before the last day in range, so with no dates the range is today so far plus the six whole days before it. For a rolling window that ends now, pass a datetime or use GET /v1/analytics?days=N.
          */
         start_date?: string;
         /**
-         * ISO 8601 date (the whole day is included) or datetime. Future values are clamped to now. Defaults to now.
+         * ISO 8601 date or datetime; a bare date includes that whole day (up to the next midnight in timezone). Future values are clamped to now. Defaults to now. The range is start inclusive, end exclusive.
          */
         end_date?: string;
         /**
-         * IANA time zone for dates and periods, e.g. America/New_York. Default UTC.
+         * IANA time zone for bare dates and periods, e.g. America/New_York. Default UTC.
          */
         timezone?: string;
         /**
@@ -3184,7 +3388,13 @@ export type GetEmailMetricsResponses = {
      */
     200: {
         object: string;
+        /**
+         * The resolved start of the range, as a UTC instant (inclusive)
+         */
         start_date: string;
+        /**
+         * The resolved end of the range, as a UTC instant (exclusive)
+         */
         end_date: string;
         timezone: string;
         metrics: Array<string>;
@@ -5780,6 +5990,10 @@ export type ListContactsData = {
          */
         segment_id?: string;
         /**
+         * Not in Resend. Only contacts subscribed to this topic: their own opt-in, or the topic default when they never chose. Combine with status=subscribed for the contacts a topic broadcast can reach.
+         */
+        topic_id?: string;
+        /**
          * Number of contacts to return
          */
         limit?: number;
@@ -6733,9 +6947,13 @@ export type RemoveTeamMemberErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller may not change this member: their role does not allow it, or the calling API key reaches past its own access. code key_out_of_reach (scopes names what the member's keys have beyond the calling key; empty for an owner, or for a role above member), key_revoked or missing_scope (the calling key was revoked or lost team:manage while the request waited).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'key_out_of_reach' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -6792,9 +7010,13 @@ export type UpdateTeamMemberErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller may not change this member: their role does not allow it, or the calling API key reaches past its own access. code key_out_of_reach (scopes names what the member's keys have beyond the calling key; empty for an owner, or for a role above member), key_revoked or missing_scope (the calling key was revoked or lost team:manage while the request waited).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'key_out_of_reach' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -6887,9 +7109,13 @@ export type CreateTeamInviteErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller is not an owner or admin, the plan has no free seat, or an API key asked for an admin (code key_out_of_reach).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'key_out_of_reach' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Conflict - the resource already exists or changed meanwhile
      */
@@ -7383,6 +7609,340 @@ export type AddContactToSegmentResponses = {
 };
 
 export type AddContactToSegmentResponse = AddContactToSegmentResponses[keyof AddContactToSegmentResponses];
+
+export type ListContactTopicsData = {
+    body?: never;
+    path: {
+        /**
+         * The contact ID or email address
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/contacts/{id}/topics';
+};
+
+export type ListContactTopicsErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type ListContactTopicsError = ListContactTopicsErrors[keyof ListContactTopicsErrors];
+
+export type ListContactTopicsResponses = {
+    /**
+     * The contact's topics
+     */
+    200: ContactTopicList;
+};
+
+export type ListContactTopicsResponse = ListContactTopicsResponses[keyof ListContactTopicsResponses];
+
+export type UpdateContactTopicsData = {
+    body: UpdateContactTopicsRequest;
+    path: {
+        /**
+         * The contact ID or email address
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/contacts/{id}/topics';
+};
+
+export type UpdateContactTopicsErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type UpdateContactTopicsError = UpdateContactTopicsErrors[keyof UpdateContactTopicsErrors];
+
+export type UpdateContactTopicsResponses = {
+    /**
+     * Updated
+     */
+    200: {
+        object: string;
+        /**
+         * The contact ID
+         */
+        id: string;
+    };
+};
+
+export type UpdateContactTopicsResponse = UpdateContactTopicsResponses[keyof UpdateContactTopicsResponses];
+
+export type ListTopicsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/topics';
+};
+
+export type ListTopicsErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type ListTopicsError = ListTopicsErrors[keyof ListTopicsErrors];
+
+export type ListTopicsResponses = {
+    /**
+     * The topics
+     */
+    200: TopicList;
+};
+
+export type ListTopicsResponse = ListTopicsResponses[keyof ListTopicsResponses];
+
+export type CreateTopicData = {
+    body: CreateTopicRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/topics';
+};
+
+export type CreateTopicErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type CreateTopicError = CreateTopicErrors[keyof CreateTopicErrors];
+
+export type CreateTopicResponses = {
+    /**
+     * Topic created
+     */
+    201: Topic;
+};
+
+export type CreateTopicResponse = CreateTopicResponses[keyof CreateTopicResponses];
+
+export type DeleteTopicData = {
+    body?: never;
+    path: {
+        /**
+         * The topic ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/topics/{id}';
+};
+
+export type DeleteTopicErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type DeleteTopicError = DeleteTopicErrors[keyof DeleteTopicErrors];
+
+export type DeleteTopicResponses = {
+    /**
+     * Topic deleted
+     */
+    200: DeletedObject;
+};
+
+export type DeleteTopicResponse = DeleteTopicResponses[keyof DeleteTopicResponses];
+
+export type GetTopicData = {
+    body?: never;
+    path: {
+        /**
+         * The topic ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/topics/{id}';
+};
+
+export type GetTopicErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type GetTopicError = GetTopicErrors[keyof GetTopicErrors];
+
+export type GetTopicResponses = {
+    /**
+     * The topic
+     */
+    200: Topic;
+};
+
+export type GetTopicResponse = GetTopicResponses[keyof GetTopicResponses];
+
+export type UpdateTopicData = {
+    body: UpdateTopicRequest;
+    path: {
+        /**
+         * The topic ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/topics/{id}';
+};
+
+export type UpdateTopicErrors = {
+    /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
+     * Invalid or missing API key
+     */
+    401: Error;
+    /**
+     * Forbidden - domain not verified or insufficient permissions
+     */
+    403: Error;
+    /**
+     * Resource not found
+     */
+    404: Error;
+    /**
+     * Conflict - the resource already exists or changed meanwhile
+     */
+    409: Error;
+    /**
+     * Rate limit exceeded - retry after the period indicated in the Retry-After header
+     */
+    429: Error;
+    /**
+     * Internal server error
+     */
+    500: Error;
+};
+
+export type UpdateTopicError = UpdateTopicErrors[keyof UpdateTopicErrors];
+
+export type UpdateTopicResponses = {
+    /**
+     * Topic updated
+     */
+    200: Topic;
+};
+
+export type UpdateTopicResponse = UpdateTopicResponses[keyof UpdateTopicResponses];
 
 export type AddSuppressionsBatchData = {
     body: {
@@ -7903,6 +8463,10 @@ export type GetBroadcastAudienceData = {
          * Preview one segment instead of all contacts
          */
         segment_id?: string;
+        /**
+         * Count only contacts subscribed to this topic
+         */
+        topic_id?: string;
     };
     url: '/v1/broadcasts/audience';
 };
@@ -9198,6 +9762,14 @@ export type CreateApiKeyErrors = {
      */
     401: Error;
     /**
+     * Forbidden. The caller is not a team owner or admin, or the calling API key reaches past its own access: code scope_not_grantable (scopes names what it may not grant), key_out_of_reach (the target key has the scopes named, or was made by a member with a higher role), expiring_key (a connected app's token cannot create keys), key_revoked or missing_scope (the calling key was revoked or lost apikey:manage while the request waited).
+     */
+    403: {
+        error: string;
+        code?: 'scope_not_grantable' | 'key_out_of_reach' | 'expiring_key' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
+    /**
      * Rate limit exceeded - retry after the period indicated in the Retry-After header
      */
     429: Error;
@@ -9232,9 +9804,21 @@ export type RevokeApiKeyData = {
 
 export type RevokeApiKeyErrors = {
     /**
+     * Bad request - check your payload
+     */
+    400: Error;
+    /**
      * Invalid or missing API key
      */
     401: Error;
+    /**
+     * Forbidden. The caller is not a team owner or admin, or the calling API key reaches past its own access: code scope_not_grantable (scopes names what it may not grant), key_out_of_reach (the target key has the scopes named, or was made by a member with a higher role), expiring_key (a connected app's token cannot create keys), key_revoked or missing_scope (the calling key was revoked or lost apikey:manage while the request waited).
+     */
+    403: {
+        error: string;
+        code?: 'scope_not_grantable' | 'key_out_of_reach' | 'expiring_key' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -9273,6 +9857,10 @@ export type UpdateApiKeyData = {
          * Replaces the key's scopes
          */
         scopes?: Array<string>;
+        /**
+         * Not in Resend. The category of mail sent over SMTP with this key when the message has no X-SMTPfast-Category header. transactional: no List-Unsubscribe header, and a recipient's marketing opt-out does not block it (use it for a key that only sends sign-in, password-reset and receipt mail, for example from Supabase Auth or Firebase). marketing: the one-click unsubscribe header and every opt-out apply (use it for newsletters). A message with an unsubscribe placeholder is always marketing. Sends through the HTTP API are not affected; they use the category field. Defaults to marketing. Never set transactional on a key that sends newsletters or promotions.
+         */
+        smtp_category?: 'transactional' | 'marketing';
     };
     path: {
         /**
@@ -9294,9 +9882,13 @@ export type UpdateApiKeyErrors = {
      */
     401: Error;
     /**
-     * Forbidden - domain not verified or insufficient permissions
+     * Forbidden. The caller is not a team owner or admin, or the calling API key reaches past its own access: code scope_not_grantable (scopes names what it may not grant), key_out_of_reach (the target key has the scopes named, or was made by a member with a higher role), expiring_key (a connected app's token cannot create keys), key_revoked or missing_scope (the calling key was revoked or lost apikey:manage while the request waited).
      */
-    403: Error;
+    403: {
+        error: string;
+        code?: 'scope_not_grantable' | 'key_out_of_reach' | 'expiring_key' | 'key_revoked' | 'missing_scope';
+        scopes?: Array<string>;
+    };
     /**
      * Resource not found
      */
@@ -9317,12 +9909,7 @@ export type UpdateApiKeyResponses = {
     /**
      * The updated key
      */
-    200: {
-        id?: string;
-        name?: string;
-        keyPrefix?: string;
-        scopes?: Array<string>;
-    };
+    200: ApiKey;
 };
 
 export type UpdateApiKeyResponse = UpdateApiKeyResponses[keyof UpdateApiKeyResponses];
@@ -11293,7 +11880,7 @@ export type GetAnalyticsData = {
     path?: never;
     query?: {
         /**
-         * Window in days (1-90) for the `window` block. Present in the response only when days or domain is given.
+         * Rolling window for the `window` block: the last days x 24 hours up to the time of the request (UTC), not from midnight. 1-90; the block is present only when days or domain is given.
          */
         days?: number;
         /**
